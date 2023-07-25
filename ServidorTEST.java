@@ -1,33 +1,16 @@
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
 import java.net.NetworkInterface;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Servidor {
+public class ServidorTEST {
     private static Map<Integer, Sala> salas = new HashMap<>();
     private static Map<Integer, Reserva> reservas = new HashMap<>();
     private static int proximoIdReserva = 1;
-
-    private InetAddress endereco;
-    private int porta;
-
-    public Servidor(InetAddress endereco, int porta) {
-        this.endereco = endereco;
-        this.porta = porta;
-    }
-
-    public InetAddress getEndereco() {
-        return endereco;
-    }
-
-    public int getPorta() {
-        return porta;
-    }
 
     public static void main(String[] args) {
         // Criação de algumas salas fictícias para demonstração
@@ -37,7 +20,7 @@ public class Servidor {
 
         try {
             String grupo = "239.10.10.10";
-            int porta = 3333;
+            int porta = 2222;
 
             MulticastSocket multicastSocket = new MulticastSocket(null);
             multicastSocket.bind(new InetSocketAddress(porta));
