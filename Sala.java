@@ -4,22 +4,21 @@ public class Sala {
 
     public Sala(int numero) {
         this.numero = numero;
-        this.horarioReservado = null;
     }
 
     public int getNumero() {
         return numero;
     }
 
-    public String getHorarioReservado() {
-        return horarioReservado;
-    }
+    // public String getHorarioReservado() {
+    //     return horarioReservado;
+    // }
 
-    public void reservarSala(String horario) {
-        this.horarioReservado = horario;
-    }
+    // public void reservarSala(String horario) {
+    //     this.horarioReservado = horario;
+    // }
 
-    public void cancelarReserva() {
-        this.horarioReservado = null;
-    }
+    // public void cancelarReserva() {
+    //     this.horarioReservado = null;
+    // }
 }

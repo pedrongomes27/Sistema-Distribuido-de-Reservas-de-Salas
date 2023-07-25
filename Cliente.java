@@ -35,7 +35,13 @@ public class Cliente {
                     int numeroSala = Integer.parseInt(scanner.nextLine());
                     System.out.print("Digite o horário da reserva (hh:mm): ");
                     String horario = scanner.nextLine();
-                    enviarMensagem("FAZER_RESERVA " + numeroSala + " " + horario, multicastSocket, grupo, porta);
+                    System.out.print("Digite seu nome: ");
+                    String nome = scanner.nextLine();
+                    System.out.print("Digite seu sobrenome: ");
+                    String sobrenome = scanner.nextLine();
+                    System.out.print("Digite seu e-mail: ");
+                    String email = scanner.nextLine();
+                    enviarMensagem("FAZER_RESERVA " + numeroSala + " " + horario + " " + nome + " " + sobrenome + " " + email, multicastSocket, grupo, porta);
                     receberResposta(multicastSocket);
 
                 }
@@ -52,13 +58,11 @@ public class Cliente {
 
                 else if (opcao == 4) {
                     break;
-
                 }
-                
+
                 else if (opcao == 0) {
                     enviarMensagem("SAIR", multicastSocket, grupo, porta);
                     break;
-
                 }
 
                 else {
