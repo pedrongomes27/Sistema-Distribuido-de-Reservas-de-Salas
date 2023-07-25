@@ -10,3 +10,4 @@ O objetivo deste projeto é desenvolver um sistema distribuído para gerenciar e
 - [✅] Cancelamento de reservas: Os estudantes devem ter a opção de cancelar suas reservas, liberando a sala de estudo para outros usuários.
 - [ ] Gerenciamento de conflitos: O sistema deve verificar se existem conflitos de agendamento ao fazer uma reserva e notificar o estudante caso haja algum problema.
 - [ ] Registro de usuários: Os estudantes poderão se registrar no sistema, fornecendo informações básicas, como nome, número de identificação e curso.
+- [ ] MAIS DE UMA MENSAGEM DE CLIENTE POR VEZ NO SERVIDOR COM THREADS
