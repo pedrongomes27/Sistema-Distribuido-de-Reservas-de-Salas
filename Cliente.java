@@ -17,14 +17,16 @@ public class Cliente {
             InetAddress enderecoServidor = null;
             int portaServidor = 0;
 
-            while (enderecoServidor == null) {
+            while (true) {
+                boolean servidorEncontrado = false;
                 for (int porta : portasServidores) {
                     try {
-                        if (verificarServidorDisponivel(multicastSocket, grupo, porta) != null) {
+                        if (verificarServidorDisponivel(multicastSocket, grupo, porta)) {
                             enderecoServidor = grupo;
                             portaServidor = porta;
                             System.out.println(
                                     "Servidor disponível no endereço: " + grupo.getHostAddress() + ", porta: " + porta);
+                            servidorEncontrado = true;
                             break; // Encerra o loop caso encontre um servidor disponível
                         }
                     } catch (IOException e) {
@@ -32,9 +34,11 @@ public class Cliente {
                     }
                 }
 
-                if (enderecoServidor == null) {
+                if (!servidorEncontrado) {
                     System.out.println("Nenhum servidor disponível. Tentando novamente em 5 segundos...");
                     Thread.sleep(5000);
+                } else {
+                    break; // Encerra o loop externo caso encontre um servidor disponível
                 }
             }
 
@@ -54,38 +58,146 @@ public class Cliente {
 
                 // Se chegou aqui, o servidor está disponível
                 if (opcao == 1) {
-                    if (verificarServidorDisponivel(multicastSocket, grupo, portaServidor) != null) {
+                    if (verificarServidorDisponivel(multicastSocket, grupo, portaServidor)) {
                         enviarMensagem("CONSULTAR_DISPONIBILIDADE", multicastSocket, enderecoServidor, portaServidor);
                         receberResposta(multicastSocket);
+                    } else {
+                        System.out.println("Servidor indisponível. Aguarde, tentando conexão...");
+                        enderecoServidor = null;
+                        portaServidor = 0;
+
+                        encerrarVerificadorServidor(verificadorServidor);
+
+                        while (true) {
+                            boolean servidorEncontrado = false;
+                            for (int porta : portasServidores) {
+                                try {
+                                    if (verificarServidorDisponivel(multicastSocket, grupo, porta)) {
+                                        enderecoServidor = grupo;
+                                        portaServidor = porta;
+                                        System.out.println(
+                                                "Servidor disponível no endereço: " + grupo.getHostAddress()
+                                                        + ", porta: " + porta);
+                                        servidorEncontrado = true;
+                                        break; // Encerra o loop caso encontre um servidor disponível
+                                    }
+                                } catch (IOException e) {
+                                    // System.out.println("Servidor não respondeu na porta " + porta);
+                                }
+                            }
+
+                            if (!servidorEncontrado) {
+                                System.out.println("Nenhum servidor disponível. Tentando novamente em 5 segundos...");
+                                Thread.sleep(5000);
+                            } else {
+                                break; // Encerra o loop externo caso encontre um servidor disponível
+                            }
+                        }
+                        // Encerra o verificadorServidor atual, se existir
+                        verificadorServidor = new VerificadorServidor(multicastSocket, grupo, portaServidor);
+                        verificadorServidor.start();
                     }
                 } else if (opcao == 2) {
-                    System.out.print("Digite o número da sala desejada: ");
-                    int numeroSala = Integer.parseInt(scanner.nextLine());
-                    System.out.print("Digite o horário da reserva (hh:mm): ");
-                    String horario = scanner.nextLine();
-                    System.out.print("Digite seu nome: ");
-                    String nome = scanner.nextLine();
-                    System.out.print("Digite seu sobrenome: ");
-                    String sobrenome = scanner.nextLine();
-                    System.out.print("Digite seu e-mail: ");
-                    String email = scanner.nextLine();
-                    if (verificarServidorDisponivel(multicastSocket, grupo, portaServidor) != null) {
+                    if (verificarServidorDisponivel(multicastSocket, grupo, portaServidor)) {
+                        System.out.print("Digite o número da sala desejada: ");
+                        int numeroSala = Integer.parseInt(scanner.nextLine());
+                        System.out.print("Digite o horário da reserva (hh:mm): ");
+                        String horario = scanner.nextLine();
+                        System.out.print("Digite seu nome: ");
+                        String nome = scanner.nextLine();
+                        System.out.print("Digite seu sobrenome: ");
+                        String sobrenome = scanner.nextLine();
+                        System.out.print("Digite seu e-mail: ");
+                        String email = scanner.nextLine();
                         enviarMensagem(
                                 "FAZER_RESERVA " + numeroSala + " " + horario + " " + nome + " " + sobrenome + " "
                                         + email,
                                 multicastSocket, enderecoServidor, portaServidor);
                         receberResposta(multicastSocket);
+                    } else {
+                        System.out.println("Servidor indisponível. Aguarde, tentando conexão...");
+                        enderecoServidor = null;
+                        portaServidor = 0;
+
+                        encerrarVerificadorServidor(verificadorServidor);
+
+                        while (true) {
+                            boolean servidorEncontrado = false;
+                            for (int porta : portasServidores) {
+                                try {
+                                    if (verificarServidorDisponivel(multicastSocket, grupo, porta)) {
+                                        enderecoServidor = grupo;
+                                        portaServidor = porta;
+                                        System.out.println(
+                                                "Servidor disponível no endereço: " + grupo.getHostAddress()
+                                                        + ", porta: " + porta);
+                                        servidorEncontrado = true;
+                                        break; // Encerra o loop caso encontre um servidor disponível
+                                    }
+                                } catch (IOException e) {
+                                    // System.out.println("Servidor não respondeu na porta " + porta);
+                                }
+                            }
+
+                            if (!servidorEncontrado) {
+                                System.out.println("Nenhum servidor disponível. Tentando novamente em 5 segundos...");
+                                Thread.sleep(5000);
+                            } else {
+                                break; // Encerra o loop externo caso encontre um servidor disponível
+                            }
+                        }
+                        // Encerra o verificadorServidor atual, se existir
+                        verificadorServidor = new VerificadorServidor(multicastSocket, grupo, portaServidor);
+                        verificadorServidor.start();
                     }
+
                 } else if (opcao == 3) {
-                    System.out.print("Digite o número da sala da reserva a ser cancelada: ");
-                    int numeroSala = Integer.parseInt(scanner.nextLine());
-                    System.out.print("Digite o horário da reserva a ser cancelada (hh:mm): ");
-                    String horario = scanner.nextLine();
-                    System.out.print("Digite seu e-mail: ");
-                    String email = scanner.nextLine();
-                    enviarMensagem("CANCELAR_RESERVA " + numeroSala + " " + horario + " " + email, multicastSocket,
-                            enderecoServidor, portaServidor);
-                    receberResposta(multicastSocket);
+                    if (verificarServidorDisponivel(multicastSocket, grupo, portaServidor)) {
+                        System.out.print("Digite o número da sala da reserva a ser cancelada: ");
+                        int numeroSala = Integer.parseInt(scanner.nextLine());
+                        System.out.print("Digite o horário da reserva a ser cancelada (hh:mm): ");
+                        String horario = scanner.nextLine();
+                        System.out.print("Digite seu e-mail: ");
+                        String email = scanner.nextLine();
+                        enviarMensagem("CANCELAR_RESERVA " + numeroSala + " " + horario + " " + email, multicastSocket,
+                                enderecoServidor, portaServidor);
+                        receberResposta(multicastSocket);
+                    } else {
+                        System.out.println("Servidor indisponível. Aguarde, tentando conexão...");
+                        enderecoServidor = null;
+                        portaServidor = 0;
+
+                        encerrarVerificadorServidor(verificadorServidor);
+
+                        while (true) {
+                            boolean servidorEncontrado = false;
+                            for (int porta : portasServidores) {
+                                try {
+                                    if (verificarServidorDisponivel(multicastSocket, grupo, porta)) {
+                                        enderecoServidor = grupo;
+                                        portaServidor = porta;
+                                        System.out.println(
+                                                "Servidor disponível no endereço: " + grupo.getHostAddress()
+                                                        + ", porta: " + porta);
+                                        servidorEncontrado = true;
+                                        break; // Encerra o loop caso encontre um servidor disponível
+                                    }
+                                } catch (IOException e) {
+                                    // System.out.println("Servidor não respondeu na porta " + porta);
+                                }
+                            }
+
+                            if (!servidorEncontrado) {
+                                System.out.println("Nenhum servidor disponível. Tentando novamente em 5 segundos...");
+                                Thread.sleep(5000);
+                            } else {
+                                break; // Encerra o loop externo caso encontre um servidor disponível
+                            }
+                        }
+                        // Encerra o verificadorServidor atual, se existir
+                        verificadorServidor = new VerificadorServidor(multicastSocket, grupo, portaServidor);
+                        verificadorServidor.start();
+                    }
                 } else if (opcao == 4) {
                     break;
                 } else {
@@ -100,8 +212,9 @@ public class Cliente {
             e.printStackTrace();
         }
     }
+    
 
-    private static Servidor verificarServidorDisponivel(DatagramSocket socket, InetAddress grupo, int portaServidor)
+    private static boolean verificarServidorDisponivel(DatagramSocket socket, InetAddress grupo, int portaServidor)
             throws IOException {
         String mensagemSolicitacao = "heartbeat";
         byte[] bufferSolicitacao = mensagemSolicitacao.getBytes();
@@ -118,14 +231,14 @@ public class Cliente {
             String resposta = new String(pacoteResposta.getData(), 0, pacoteResposta.getLength());
 
             if (resposta.equals("heartbeat")) {
-                return new Servidor(grupo, portaServidor);
+                return true;
             }
-
         } catch (IOException e) {
-            throw e;
+            // O servidor não respondeu, então consideramos como servidor indisponível
+            return false;
         }
 
-        return null;
+        return false;
     }
 
     private static void enviarMensagem(String mensagem, DatagramSocket socket, InetAddress servidorInfo,
@@ -165,6 +278,17 @@ public class Cliente {
                 } catch (InterruptedException e) {
                     break;
                 }
+            }
+        }
+    }
+
+    private static void encerrarVerificadorServidor(Thread verificadorServidor) {
+        if (verificadorServidor != null && verificadorServidor.isAlive()) {
+            verificadorServidor.interrupt();
+            try {
+                verificadorServidor.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }

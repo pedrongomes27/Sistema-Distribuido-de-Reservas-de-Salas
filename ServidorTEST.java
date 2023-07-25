@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
 import java.net.NetworkInterface;
@@ -11,6 +12,22 @@ public class ServidorTEST {
     private static Map<Integer, Sala> salas = new HashMap<>();
     private static Map<Integer, Reserva> reservas = new HashMap<>();
     private static int proximoIdReserva = 1;
+
+    private InetAddress endereco;
+    private int porta;
+
+    public ServidorTEST(InetAddress endereco, int porta) {
+        this.endereco = endereco;
+        this.porta = porta;
+    }
+
+    public InetAddress getEndereco() {
+        return endereco;
+    }
+
+    public int getPorta() {
+        return porta;
+    }
 
     public static void main(String[] args) {
         // Criação de algumas salas fictícias para demonstração
@@ -67,6 +84,8 @@ public class ServidorTEST {
                     Usuario usuario = new Usuario(nome, sobrenome, email);
                     fazerReserva(numeroSala, horario, usuario,
                             new InetSocketAddress(pacote.getAddress(), pacote.getPort()));
+                    enviarMensagemParaRotas(
+                            "FAZER_RESERVA " + numeroSala + " " + horario + " " + nome + " " + sobrenome + " " + email);
                 }
 
                 else if (operacao.equals("CANCELAR_RESERVA")) {
@@ -75,6 +94,12 @@ public class ServidorTEST {
                     String email = partesMensagem[3];
                     cancelarReserva(numeroSala, horario, email,
                             new InetSocketAddress(pacote.getAddress(), pacote.getPort()));
+                    enviarMensagemParaRotas("CANCELAR_RESERVA " + numeroSala + " " + horario + " " + email);
+                }
+
+                else if (operacao.equals("ATUALIZAR_RESERVAS")) {
+                    // Chamar método para processar a atualização das reservas
+                    atualizarReservas(mensagemRecebida.substring(19)); // Remove o prefixo "ATUALIZAR_RESERVAS "
                 }
 
                 else if (operacao.equals("SAIR")) {
@@ -133,6 +158,7 @@ public class ServidorTEST {
                 "Reserva da Sala " + numeroSala + " feita para " + horario + " por " + usuario.getNome() + " "
                         + usuario.getSobrenome(),
                 enderecoCliente);
+        enviarReservasParaServidores();
 
     }
 
@@ -162,6 +188,28 @@ public class ServidorTEST {
                             + email,
                     enderecoCliente);
         }
+        enviarReservasParaServidores();
+
+    }
+
+    private static void atualizarReservas(String mensagem) {
+        String[] reservasData = mensagem.split(";");
+
+        for (String reservaData : reservasData) {
+            String[] dadosReserva = reservaData.split(",");
+            int idReserva = Integer.parseInt(dadosReserva[0]);
+            int numeroSala = Integer.parseInt(dadosReserva[1]);
+            String horario = dadosReserva[2];
+            String email = dadosReserva[3];
+            String nome = dadosReserva[4];
+            String sobrenome = dadosReserva[5];
+    
+            // Crie o objeto Usuario com os dados extraídos da mensagem
+            Usuario usuario = new Usuario(nome, sobrenome, email);
+    
+            Reserva reserva = new Reserva(idReserva, numeroSala, horario, usuario);
+            reservas.put(idReserva, reserva);
+        }
     }
 
     private static void enviarMensagem(String mensagem, InetSocketAddress enderecoCliente) {
@@ -186,5 +234,45 @@ public class ServidorTEST {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void enviarMensagemParaRotas(String mensagem) {
+        try {
+            String grupo1 = "239.10.10.10";
+            int porta1 = 1111;
+
+            String grupo2 = "239.10.10.10";
+            int porta2 = 3333;
+
+            enviarMensagemParaGrupo(mensagem, grupo1, porta1);
+            enviarMensagemParaGrupo(mensagem, grupo2, porta2);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void enviarReservasParaServidores() {
+        StringBuilder mensagemReservas = new StringBuilder("ATUALIZAR_RESERVAS");
+
+        // Construir a mensagem contendo as reservas no formato
+        // "idReserva,numeroSala,horario,email;..."
+        for (Reserva reserva : reservas.values()) {
+            mensagemReservas.append(reserva.getId()).append(",").append(reserva.getNumeroSala()).append(",")
+                    .append(reserva.getHorario()).append(",").append(reserva.getUsuario().getEmail()).append(";");
+        }
+
+        // Enviar a mensagem para os outros servidores
+        enviarMensagemParaRotas(mensagemReservas.toString());
+    }
+
+    private static void enviarMensagemParaGrupo(String mensagem, String grupo, int porta) throws IOException {
+        DatagramSocket socket = new DatagramSocket();
+        byte[] buffer = mensagem.getBytes();
+        InetAddress grupoAddr = InetAddress.getByName(grupo);
+        DatagramPacket pacote = new DatagramPacket(buffer, buffer.length, grupoAddr, porta);
+
+        socket.send(pacote);
+        socket.close();
+        System.out.println("Mensagem enviada para o grupo " + grupo + " na porta " + porta);
     }
 }
