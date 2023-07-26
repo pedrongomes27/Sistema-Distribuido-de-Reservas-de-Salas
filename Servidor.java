@@ -298,6 +298,9 @@ public class Servidor {
     private static Map<Integer, Sala> salas = new HashMap<>();
     private static Map<Integer, Reserva> reservas = new HashMap<>();
     private static int proximoIdReserva = 1;
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_RED = "\u001B[31m";
+    public static final String ANSI_GREEN = "\u001B[32m";
 
     // private static final int SERVIDOR_ID = 1;
 
@@ -313,7 +316,7 @@ public class Servidor {
 
             MulticastSocket multicastSocket = new MulticastSocket(null);
             multicastSocket.bind(new InetSocketAddress(porta));
-            NetworkInterface networkInterface = NetworkInterface.getByName("wlan0");
+            NetworkInterface networkInterface = NetworkInterface.getByName("eth2");
             multicastSocket.joinGroup(new InetSocketAddress(grupo, porta), networkInterface);
 
             byte[] buffer = new byte[1024];
@@ -387,15 +390,15 @@ public class Servidor {
 
             for (Reserva reservaMap : reservas.values()) {
                 if (reservaMap.getNumeroSala() == sala.getNumero()) {
-                    resposta.append("Laboratório ").append(sala.getNumero()).append(": Reservado para as ")
-                            .append(reservaMap.getHorario()).append(" por ").append(reservaMap.getUsuario().getNome())
-                            .append(reservaMap.getUsuario().getSobrenome()).append("\n");
+                    resposta.append("Laboratório ").append(sala.getNumero()).append(": ").append(ANSI_RED).append("Reservado para as ")
+                            .append(reservaMap.getHorario()).append(" por ").append(reservaMap.getUsuario().getNome()).append(" ")
+                            .append(reservaMap.getUsuario().getSobrenome()).append(ANSI_RESET).append("\n");
                     encontrouReserva = true;
                 }
             }
 
             if (!encontrouReserva) {
-                resposta.append("Laboratório ").append(sala.getNumero()).append(": Disponível\n");
+                resposta.append("Laboratório ").append(sala.getNumero()).append(": ").append(ANSI_GREEN).append("Disponível\n").append(ANSI_RESET);
             }
         }
 
@@ -418,8 +421,8 @@ public class Servidor {
         Reserva novaReserva = new Reserva(idReserva, numeroSala, horario, usuario);
         reservas.put(idReserva, novaReserva);
         enviarMensagem(
-                "Reserva da Sala " + numeroSala + " feita para " + horario + " por " + usuario.getNome() + " "
-                        + usuario.getSobrenome(),
+                "Reserva da Sala " + numeroSala + " feita para " + horario + " por "
+                        + usuario.getNome().concat(" ").concat(usuario.getSobrenome()),
                 enderecoCliente);
         enviarDadosParaOutroServidor();
     }
@@ -468,10 +471,13 @@ public class Servidor {
         StringBuilder dados = new StringBuilder();
 
         for (Reserva reserva : reservas.values()) {
-            dados.append(reserva.getId()).append(" ").append(reserva.getNumeroSala()).append(" ")
-                    .append(reserva.getHorario()).append(" ").append(reserva.getUsuario().getNome()).append(" ")
-                    .append(reserva.getUsuario().getSobrenome()).append(" ").append(reserva.getUsuario().getEmail())
-                    .append("\n");
+            dados.append(reserva.getId()).append(" ")
+                    .append(reserva.getNumeroSala()).append(" ")
+                    .append(reserva.getHorario()).append(" ")
+                    .append(reserva.getUsuario().getNome()).append(" ")
+                    .append(reserva.getUsuario().getSobrenome()).append(" ")
+                    .append(reserva.getUsuario().getEmail()).append(" ")
+            .append("\n");
         }
 
         if (!dados.toString().isEmpty()) {

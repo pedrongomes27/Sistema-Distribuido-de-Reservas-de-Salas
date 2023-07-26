@@ -294,10 +294,13 @@ import java.net.NetworkInterface;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ServidorTEST {
+public class Servidor2 {
     private static Map<Integer, Sala> salas = new HashMap<>();
     private static Map<Integer, Reserva> reservas = new HashMap<>();
     private static int proximoIdReserva = 1;
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_RED = "\u001B[31m";
+    public static final String ANSI_GREEN = "\u001B[32m";
 
     // private static final int SERVIDOR_ID = 2;
 
@@ -313,7 +316,7 @@ public class ServidorTEST {
 
             MulticastSocket multicastSocket = new MulticastSocket(null);
             multicastSocket.bind(new InetSocketAddress(porta));
-            NetworkInterface networkInterface = NetworkInterface.getByName("wlan0");
+            NetworkInterface networkInterface = NetworkInterface.getByName("eth2");
             multicastSocket.joinGroup(new InetSocketAddress(grupo, porta), networkInterface);
 
             byte[] buffer = new byte[1024];
@@ -387,15 +390,18 @@ public class ServidorTEST {
 
             for (Reserva reservaMap : reservas.values()) {
                 if (reservaMap.getNumeroSala() == sala.getNumero()) {
-                    resposta.append("Laboratório ").append(sala.getNumero()).append(": Reservado para as ")
+                    resposta.append("Laboratório ").append(sala.getNumero()).append(": ").append(ANSI_RED)
+                            .append("Reservado para as ")
                             .append(reservaMap.getHorario()).append(" por ").append(reservaMap.getUsuario().getNome())
-                            .append(reservaMap.getUsuario().getSobrenome()).append("\n");
+                            .append(" ")
+                            .append(reservaMap.getUsuario().getSobrenome()).append(ANSI_RESET).append("\n");
                     encontrouReserva = true;
                 }
             }
 
             if (!encontrouReserva) {
-                resposta.append("Laboratório ").append(sala.getNumero()).append(": Disponível\n");
+                resposta.append("Laboratório ").append(sala.getNumero()).append(": ").append(ANSI_GREEN)
+                        .append("Disponível\n").append(ANSI_RESET);
             }
         }
 
