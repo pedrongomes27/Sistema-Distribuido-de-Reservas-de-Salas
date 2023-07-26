@@ -7,9 +7,9 @@ import java.util.Scanner;
 public class Cliente {
     public static void main(String[] args) {
         try {
-            InetAddress grupo = InetAddress.getByName("239.10.10.10");
+            InetAddress grupo = InetAddress.getByName("239.10.10.11");
             int[] portasServidores = { 1111, 2222, 3333 }; // Lista de portas dos servidores
-            int timeout = 3000; // Tempo de espera para receber resposta em milissegundos (3 segundos)
+            int timeout = 5000; // Tempo de espera para receber resposta em milissegundos (3 segundos)
 
             DatagramSocket multicastSocket = new DatagramSocket();
             multicastSocket.setSoTimeout(timeout); // Define o tempo limite para aguardar a resposta
@@ -212,11 +212,10 @@ public class Cliente {
             e.printStackTrace();
         }
     }
-    
 
     private static boolean verificarServidorDisponivel(DatagramSocket socket, InetAddress grupo, int portaServidor)
             throws IOException {
-        String mensagemSolicitacao = "heartbeat";
+        String mensagemSolicitacao = "IS_SERVER_ON";
         byte[] bufferSolicitacao = mensagemSolicitacao.getBytes();
         DatagramPacket pacoteSolicitacao = new DatagramPacket(bufferSolicitacao, bufferSolicitacao.length, grupo,
                 portaServidor);
@@ -230,15 +229,11 @@ public class Cliente {
             socket.receive(pacoteResposta);
             String resposta = new String(pacoteResposta.getData(), 0, pacoteResposta.getLength());
 
-            if (resposta.equals("heartbeat")) {
-                return true;
-            }
+            return resposta.equals("HEARTBEAT");
         } catch (IOException e) {
             // O servidor não respondeu, então consideramos como servidor indisponível
             return false;
         }
-
-        return false;
     }
 
     private static void enviarMensagem(String mensagem, DatagramSocket socket, InetAddress servidorInfo,
@@ -271,7 +266,7 @@ public class Cliente {
         public void run() {
             while (!Thread.interrupted()) {
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(7000);
                     verificarServidorDisponivel(socket, grupo, portaServidor);
                 } catch (IOException e) {
                     System.out.println("Servidor não está disponível. Tentando novamente...");
