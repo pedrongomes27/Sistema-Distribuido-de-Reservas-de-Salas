@@ -117,9 +117,6 @@ public class Cliente {
                     try {
                         if (verificarServidorDisponivel(multicastSocket, grupo, porta)) {
                             portaServidor = porta;
-                            // System.out.println(
-                            // "Servidor disponível no endereço: " + grupo.getHostAddress()
-                            // + ", porta: " + porta);
                             servidorEncontrado = true;
                             break;
                         }
@@ -140,6 +137,7 @@ public class Cliente {
     }
 
     private static void mostrarMenu() {
+        System.out.println(" ");
         System.out.println(ANSI_CYAN + "Bem-vindo ao Sistema de Reservas de Salas de Estudo!" + ANSI_RESET);
         System.out.println(ANSI_YELLOW + "Digite 1 para visualizar disponibilidade das salas");
         System.out.println("Digite 2 para fazer uma reserva");

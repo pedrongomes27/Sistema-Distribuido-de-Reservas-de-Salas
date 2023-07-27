@@ -41,6 +41,10 @@ public class Servidor {
 
             System.out.println("Servidor Multicast iniciado. Aguardando mensagem...");
 
+            int portaOutroServidor = 2222;
+            InetSocketAddress enderecoDestino = new InetSocketAddress(grupo, portaOutroServidor);
+            enviarMensagemServidorOnline(enderecoDestino);
+
             while (true) {
                 DatagramPacket pacote = new DatagramPacket(buffer, buffer.length);
                 multicastSocket.receive(pacote);
@@ -50,9 +54,16 @@ public class Servidor {
                 String[] partesMensagem = mensagemRecebida.split(" ");
                 String operacao = partesMensagem[0];
 
-                if (operacao.equals("CONSULTAR_DISPONIBILIDADE")) {
+                if (mensagemRecebida.equals("SERVER_ONLINE")) {
+                    System.out.println("Recebida mensagem de servidor online do outro servidor.");
+                    enviarDadosParaOutroServidor();
+                }
+
+                else if (operacao.equals("CONSULTAR_DISPONIBILIDADE")) {
                     consultarDisponibilidade(new InetSocketAddress(pacote.getAddress(), pacote.getPort()));
-                } else if (operacao.equals("FAZER_RESERVA")) {
+                }
+
+                else if (operacao.equals("FAZER_RESERVA")) {
                     int numeroSala = Integer.parseInt(partesMensagem[1]);
                     String horario = partesMensagem[2];
                     String nome = partesMensagem[3];
@@ -64,7 +75,9 @@ public class Servidor {
                     // enviarMensagemParaRotas(
                     // "FAZER_RESERVA " + numeroSala + " " + horario + " " + nome + " " + sobrenome
                     // + " " + email);
-                } else if (operacao.equals("CANCELAR_RESERVA")) {
+                }
+
+                else if (operacao.equals("CANCELAR_RESERVA")) {
                     int numeroSala = Integer.parseInt(partesMensagem[1]);
                     String horario = partesMensagem[2];
                     String email = partesMensagem[3];
@@ -72,15 +85,21 @@ public class Servidor {
                             new InetSocketAddress(pacote.getAddress(), pacote.getPort()));
                     // enviarMensagemParaRotas("CANCELAR_RESERVA " + numeroSala + " " + horario + "
                     // " + email);
-                } else if (operacao.equals("ATUALIZAR_RESERVAS")) {
+                }
+
+                else if (operacao.equals("ATUALIZAR_RESERVAS")) {
                     // Chamar método para processar a atualização das reservas
                     atualizarReservas(mensagemRecebida.substring(19)); // Remove o prefixo "ATUALIZAR_RESERVAS "
-                } else if (operacao.equals("SAIR")) {
+                }
+
+                else if (operacao.equals("SAIR")) {
                     multicastSocket.leaveGroup(new InetSocketAddress(grupo, porta), networkInterface);
                     multicastSocket.close();
                     System.out.println("Servidor encerrado.");
                     break;
-                } else if (operacao.equals("IS_SERVER_ON")) {
+                }
+
+                else if (operacao.equals("IS_SERVER_ON")) {
                     try {
                         byte[] resposta = "HEARTBEAT".getBytes();
                         DatagramSocket socket = new DatagramSocket();
@@ -99,25 +118,18 @@ public class Servidor {
         }
     }
 
-    // private static void gravarReservasNoArquivo(String dados) {
-    // try (FileWriter writer = new FileWriter(RESERVAS_ARQUIVO)) {
-    // writer.write(dados);
-    // } catch (IOException e) {
-    // e.printStackTrace();
-    // }
-    // }
-
-    // private static void carregarReservasDoArquivo() {
-    // try (BufferedReader reader = new BufferedReader(new
-    // FileReader(RESERVAS_ARQUIVO))) {
-    // String line;
-    // while ((line = reader.readLine()) != null) {
-    // reservasReplicadas.append(line).append("\n");
-    // }
-    // } catch (IOException e) {
-    // // O arquivo pode não existir no início, trataremos isso aqui
-    // }
-    // }
+    private static void enviarMensagemServidorOnline(InetSocketAddress enderecoDestino) {
+        try {
+            String mensagem = "SERVER_ONLINE";
+            byte[] buffer = mensagem.getBytes();
+            DatagramSocket socket = new DatagramSocket();
+            DatagramPacket pacote = new DatagramPacket(buffer, buffer.length, enderecoDestino);
+            socket.send(pacote);
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     private static void consultarDisponibilidade(InetSocketAddress enderecoCliente) {
         StringBuilder resposta = new StringBuilder("Salas disponíveis:\n");
