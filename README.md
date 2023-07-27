@@ -1,4 +1,4 @@
-# Projeto Reserva de Salas para sistemas distribuidos
+# Projeto Reserva de Salas para Sistemas Distribuídos
 
 ## Descrição
 
