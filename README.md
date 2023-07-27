@@ -1,4 +1,4 @@
-## Projeto Reserva de Salas para sistemas distribuidos
+# Projeto Reserva de Salas para sistemas distribuidos
 
 ## Descrição
 
@@ -9,6 +9,6 @@ O objetivo deste projeto é desenvolver um sistema distribuído para gerenciar e
 - [x] Reserva de salas de estudo: Os estudantes poderão visualizar a disponibilidade das salas de estudo e fazer reservas para horários específicos.
 - [x] Cancelamento de reservas: Os estudantes devem ter a opção de cancelar suas reservas, liberando a sala de estudo para outros usuários.
 
-*OPCIONAIS:
+### OPCIONAIS:
 - [ ] Gerenciamento de conflitos: O sistema deve verificar se existem conflitos de agendamento ao fazer uma reserva e notificar o estudante caso haja algum problema.
 - [x] Registro de usuários: Os estudantes poderão se registrar no sistema, fornecendo informações básicas.
