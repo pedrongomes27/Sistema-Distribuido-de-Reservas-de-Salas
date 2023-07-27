@@ -11,7 +11,7 @@ public class Cliente {
     private static final String ANSI_YELLOW = "\u001B[33m";
 
     private static int portaServidor = -1;
-    private static final int timeout = 5000;
+    private static final int timeout = 20000;
     private static final int[] portasServidores = { 1111, 2222 }; // Lista de portas dos servidores
 
     public static void main(String[] args) {
@@ -188,6 +188,9 @@ public class Cliente {
         DatagramPacket pacoteResposta = new DatagramPacket(bufferResposta, bufferResposta.length);
         socket.receive(pacoteResposta);
         String resposta = new String(pacoteResposta.getData(), 0, pacoteResposta.getLength());
+        if (resposta.equals("HEARTBEAT")){
+            return;
+        }
         System.out.println(resposta);
     }
 

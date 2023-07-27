@@ -34,7 +34,7 @@ public class Servidor2 {
 
             MulticastSocket multicastSocket = new MulticastSocket(null);
             multicastSocket.bind(new InetSocketAddress(porta));
-            NetworkInterface networkInterface = NetworkInterface.getByName("eth2");
+            NetworkInterface networkInterface = NetworkInterface.getByName("wlan0");
             multicastSocket.joinGroup(new InetSocketAddress(grupo, porta), networkInterface);
 
             byte[] buffer = new byte[1024];
