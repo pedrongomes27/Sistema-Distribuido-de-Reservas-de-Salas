@@ -1,3 +1,5 @@
+package Server;
+
 public class Sala {
     private int numero;
     private String horarioReservado;
@@ -11,14 +13,14 @@ public class Sala {
     }
 
     // public String getHorarioReservado() {
-    //     return horarioReservado;
+    // return horarioReservado;
     // }
 
     // public void reservarSala(String horario) {
-    //     this.horarioReservado = horario;
+    // this.horarioReservado = horario;
     // }
 
     // public void cancelarReserva() {
-    //     this.horarioReservado = null;
+    // this.horarioReservado = null;
     // }
 }

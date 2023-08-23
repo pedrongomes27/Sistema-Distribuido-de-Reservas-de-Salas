@@ -1,3 +1,5 @@
+package Server;
+
 import java.net.*;
 import java.util.Enumeration;
 
@@ -15,7 +17,8 @@ public class ListarInterfacesDeRede {
 
     private static String getMACAddress(NetworkInterface networkInterface) throws SocketException {
         byte[] mac = networkInterface.getHardwareAddress();
-        if (mac == null) return "Não disponível";
+        if (mac == null)
+            return "Não disponível";
         StringBuilder sb = new StringBuilder();
         for (byte b : mac) {
             sb.append(String.format("%02X:", b));

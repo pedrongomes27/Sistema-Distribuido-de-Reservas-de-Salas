@@ -1,8 +1,12 @@
+package Client;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.Scanner;
+
+import Server.Servidor;
 
 public class Cliente {
     public static void main(String[] args) {

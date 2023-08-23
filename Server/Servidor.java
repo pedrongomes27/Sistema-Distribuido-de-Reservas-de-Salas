@@ -1,3 +1,5 @@
+package Server;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -7,6 +9,8 @@ import java.net.MulticastSocket;
 import java.net.NetworkInterface;
 import java.util.HashMap;
 import java.util.Map;
+
+import Client.Reserva;
 
 public class Servidor {
     private static Map<Integer, Sala> salas = new HashMap<>();

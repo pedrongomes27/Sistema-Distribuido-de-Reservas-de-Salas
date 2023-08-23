@@ -1,3 +1,7 @@
+import Server.Usuario;
+
+package Client;
+
 public class Reserva {
     private int id;
     private int numeroSala;
@@ -11,7 +15,7 @@ public class Reserva {
         this.usuario = usuario;
     }
 
-    public int getId(){
+    public int getId() {
         return id;
     }
 
