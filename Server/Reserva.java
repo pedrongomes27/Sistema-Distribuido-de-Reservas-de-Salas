@@ -1,6 +1,4 @@
-import Server.Usuario;
-
-package Client;
+package Server;
 
 public class Reserva {
     private int id;

@@ -10,8 +10,6 @@ import java.net.NetworkInterface;
 import java.util.HashMap;
 import java.util.Map;
 
-import Client.Reserva;
-
 public class Servidor {
     private static Map<Integer, Sala> salas = new HashMap<>();
     private static Map<Integer, Reserva> reservas = new HashMap<>();
