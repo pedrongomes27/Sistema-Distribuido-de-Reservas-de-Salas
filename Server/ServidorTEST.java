@@ -65,8 +65,8 @@ public class ServidorTEST {
                     String horario = partesMensagem[2];
                     String nome = partesMensagem[3];
                     String sobrenome = partesMensagem[4];
-                    String email = partesMensagem[5];
-                    Usuario usuario = new Usuario(nome, sobrenome, email);
+                    String cpf = partesMensagem[5];
+                    Usuario usuario = new Usuario(nome, sobrenome, cpf);
                     fazerReserva(numeroSala, horario, usuario,
                             new InetSocketAddress(pacote.getAddress(), pacote.getPort()));
                 }
@@ -74,8 +74,8 @@ public class ServidorTEST {
                 else if (operacao.equals("CANCELAR_RESERVA")) {
                     int numeroSala = Integer.parseInt(partesMensagem[1]);
                     String horario = partesMensagem[2];
-                    String email = partesMensagem[3];
-                    cancelarReserva(numeroSala, horario, email,
+                    String cpf = partesMensagem[3];
+                    cancelarReserva(numeroSala, horario, cpf,
                             new InetSocketAddress(pacote.getAddress(), pacote.getPort()));
                 }
 
@@ -138,7 +138,7 @@ public class ServidorTEST {
 
     }
 
-    private static void cancelarReserva(int numeroSala, String horario, String email,
+    private static void cancelarReserva(int numeroSala, String horario, String cpf,
             InetSocketAddress enderecoCliente) {
         boolean reservaEncontrada = false;
         int idReservaParaRemover = -1;
@@ -146,7 +146,7 @@ public class ServidorTEST {
         // Percorra todas as reservas no mapa reservas
         for (Reserva reserva : reservas.values()) {
             if (reserva.getNumeroSala() == numeroSala && reserva.getHorario().equals(horario)
-                    && reserva.getUsuario().getEmail().equals(email)) {
+                    && reserva.getUsuario().getCpf().equals(cpf)) {
                 reservaEncontrada = true;
                 idReservaParaRemover = reserva.getId();
                 break; // Se encontrou a reserva, interrompe o loop
@@ -161,7 +161,7 @@ public class ServidorTEST {
         } else {
             enviarMensagem(
                     "Reserva não encontrada para a Sala " + numeroSala + " no horário " + horario + " com e-mail "
-                            + email,
+                            + cpf,
                     enderecoCliente);
         }
     }

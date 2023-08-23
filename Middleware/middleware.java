@@ -1,5 +1,5 @@
 package Middleware;
 
-public class middleware {
+public class Middleware {
 
 }

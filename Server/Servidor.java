@@ -39,7 +39,7 @@ public class Servidor {
 
         try {
             String grupo = "239.10.10.10";
-            int porta = 3333;
+            int porta = 1111;
 
             MulticastSocket multicastSocket = new MulticastSocket(null);
             multicastSocket.bind(new InetSocketAddress(porta));
@@ -82,8 +82,8 @@ public class Servidor {
                     String horario = partesMensagem[2];
                     String nome = partesMensagem[3];
                     String sobrenome = partesMensagem[4];
-                    String email = partesMensagem[5];
-                    Usuario usuario = new Usuario(nome, sobrenome, email);
+                    String cpf = partesMensagem[5];
+                    Usuario usuario = new Usuario(nome, sobrenome, cpf);
                     fazerReserva(numeroSala, horario, usuario,
                             new InetSocketAddress(pacote.getAddress(), pacote.getPort()));
                 }
@@ -91,8 +91,8 @@ public class Servidor {
                 else if (operacao.equals("CANCELAR_RESERVA")) {
                     int numeroSala = Integer.parseInt(partesMensagem[1]);
                     String horario = partesMensagem[2];
-                    String email = partesMensagem[3];
-                    cancelarReserva(numeroSala, horario, email,
+                    String cpf = partesMensagem[3];
+                    cancelarReserva(numeroSala, horario, cpf,
                             new InetSocketAddress(pacote.getAddress(), pacote.getPort()));
                 }
 
@@ -155,7 +155,7 @@ public class Servidor {
 
     }
 
-    private static void cancelarReserva(int numeroSala, String horario, String email,
+    private static void cancelarReserva(int numeroSala, String horario, String cpf,
             InetSocketAddress enderecoCliente) {
         boolean reservaEncontrada = false;
         int idReservaParaRemover = -1;
@@ -163,7 +163,7 @@ public class Servidor {
         // Percorra todas as reservas no mapa reservas
         for (Reserva reserva : reservas.values()) {
             if (reserva.getNumeroSala() == numeroSala && reserva.getHorario().equals(horario)
-                    && reserva.getUsuario().getEmail().equals(email)) {
+                    && reserva.getUsuario().getCpf().equals(cpf)) {
                 reservaEncontrada = true;
                 idReservaParaRemover = reserva.getId();
                 break; // Se encontrou a reserva, interrompe o loop
@@ -178,7 +178,7 @@ public class Servidor {
         } else {
             enviarMensagem(
                     "Reserva não encontrada para a Sala " + numeroSala + " no horário " + horario + " com e-mail "
-                            + email,
+                            + cpf,
                     enderecoCliente);
         }
     }

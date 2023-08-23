@@ -3,12 +3,12 @@ package Server;
 public class Usuario {
     private String nome;
     private String sobrenome;
-    private String email;
+    private String cpf;
 
-    public Usuario(String nome, String sobrenome, String email) {
+    public Usuario(String nome, String sobrenome, String cpf) {
         this.nome = nome;
         this.sobrenome = sobrenome;
-        this.email = email;
+        this.cpf = cpf;
     }
 
     public String getNome() {
@@ -19,7 +19,7 @@ public class Usuario {
         return sobrenome;
     }
 
-    public String getEmail() {
-        return email;
+    public String getCpf() {
+        return cpf;
     }
 }
