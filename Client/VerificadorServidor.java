@@ -19,7 +19,7 @@ public class VerificadorServidor extends Thread {
     public void run() {
         while (!Thread.interrupted()) {
             try {
-                Thread.sleep(1000);
+                Thread.sleep(500);
                 NetworkUtils.verificarServidorDisponivel(socket, enderecoServidor, portaServidor);
             } catch (IOException e) {
                 System.out.println("Servidor não está disponível. Tentando novamente...");

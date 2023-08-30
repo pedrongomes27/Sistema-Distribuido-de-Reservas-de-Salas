@@ -5,8 +5,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
-import Server.Servidor;
-
 public class NetworkUtils {
     public static void enviarMensagem(String mensagem, DatagramSocket socket, InetAddress servidorInfo,
                                       int portaServidor) throws IOException {

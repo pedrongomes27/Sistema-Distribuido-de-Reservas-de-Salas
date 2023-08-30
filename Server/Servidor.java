@@ -42,12 +42,12 @@ public class Servidor {
         salas.put(3, new Sala(3));
 
         try {
-            String grupo = "239.10.10.10";
+            String grupo = "239.10.10.11";
             int porta = 1111;
 
             MulticastSocket multicastSocket = new MulticastSocket(null);
             multicastSocket.bind(new InetSocketAddress(porta));
-            NetworkInterface networkInterface = NetworkInterface.getByName("eth2");
+            NetworkInterface networkInterface = NetworkInterface.getByName("wlan0");
             multicastSocket.joinGroup(new InetSocketAddress(grupo, porta), networkInterface);
 
             byte[] buffer = new byte[1024];
@@ -310,7 +310,7 @@ public class Servidor {
 
         if (!dados.toString().isEmpty()) {
             try {
-                String grupo = "239.10.10.10";
+                String grupo = "239.10.10.11";
                 int porta = 2222;
 
                 MulticastSocket multicastSocket = new MulticastSocket();

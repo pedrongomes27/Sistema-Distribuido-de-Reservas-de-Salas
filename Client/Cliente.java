@@ -1,14 +1,11 @@
 package Client;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.util.Scanner;
-
-import Server.Servidor;
 
 public class Cliente {
     private DatagramSocket multicastSocket = null;
@@ -52,9 +49,8 @@ public class Cliente {
     }
 
     private void localizarServidor() throws IOException, InterruptedException {
-        InetAddress enderecoGrupo = InetAddress.getByName("239.10.10.10");
-        NetworkInterface networkInterface = NetworkInterface.getByName("eth2"); // Substitua "eth2" pela interface de
-                                                                                // rede correta
+        InetAddress enderecoGrupo = InetAddress.getByName("239.10.10.11");
+        NetworkInterface networkInterface = NetworkInterface.getByName("wlan0"); // Substitua "eth2" ou "wlan0"
 
         int[] portasServidores = { 1111, 2222, 3333 }; // Lista de portas dos servidores
 
@@ -69,50 +65,17 @@ public class Cliente {
                 enderecoServidor = enderecoGrupo;
                 portaServidor = multicastPort;
                 System.out.println("Servidor disponível no endereço: " + enderecoServidor.getHostAddress() + ", porta: "
-                        + portaServidor);
-                break; // Encerra o loop caso encontre umc servidor disponível
+                        + portaServidor + " (APENAS PARA FASE DEV)");
+                break;
             }
         }
 
-        // Se não encontrou servidor, esperar e tentar novamente
         if (enderecoServidor == null) {
-            System.out.println("Nenhum servidor disponível. Tentando novamente em 5 segundos...");
-            Thread.sleep(5000);
+            System.out.println("Nenhum servidor disponível. Tentando novamente...");
+            // Thread.sleep(5000);
             localizarServidor();
         }
     }
-
-    // private static void conectarAoServidor(DatagramSocket multicastSocket,
-    // InetAddress grupo) {
-    // try {
-    // System.out.println("Servidor indisponível. Aguarde, tentando conexão...");
-    // portaServidor = -1;
-
-    // while (true) {
-    // boolean servidorEncontrado = false;
-    // for (int porta : portasServidores) {
-    // try {
-    // if (verificarServidorDisponivel(multicastSocket, grupo, porta)) {
-    // portaServidor = porta;
-    // servidorEncontrado = true;
-    // break;
-    // }
-    // } catch (IOException e) {
-    // }
-    // }
-
-    // if (!servidorEncontrado) {
-    // System.out.println("Nenhum servidor disponível. Tentando novamente em 5
-    // segundos...");
-    // Thread.sleep(5000);
-    // } else {
-    // break;
-    // }
-    // }
-    // } catch (InterruptedException e) {
-    // e.printStackTrace();
-    // }
-    // }
 
     private void iniciarVerificadorServidor() {
         verificadorServidor = new VerificadorServidor(multicastSocket, enderecoServidor,
@@ -174,6 +137,10 @@ public class Cliente {
                                     + cpf,
                             multicastSocket, enderecoServidor, portaServidor);
                     NetworkUtils.receberResposta(multicastSocket);
+                } else {
+                    encerrarVerificadorServidor(verificadorServidor);
+                    localizarServidor();
+                    iniciarVerificadorServidor();
                 }
                 break;
             case 3:
@@ -183,10 +150,17 @@ public class Cliente {
                 String findHorario = scanner.nextLine();
                 System.out.print("Digite seu cpf: ");
                 String findCpf = scanner.nextLine();
-                NetworkUtils.enviarMensagem("CANCELAR_RESERVA " + findSala + " " + findHorario + " " + findCpf,
-                        multicastSocket,
-                        enderecoServidor, portaServidor);
-                NetworkUtils.receberResposta(multicastSocket);
+                if (NetworkUtils.verificarServidorDisponivel(multicastSocket, enderecoServidor,
+                        portaServidor)) {
+                    NetworkUtils.enviarMensagem("CANCELAR_RESERVA " + findSala + " " + findHorario + " " + findCpf,
+                            multicastSocket,
+                            enderecoServidor, portaServidor);
+                    NetworkUtils.receberResposta(multicastSocket);
+                } else {
+                    encerrarVerificadorServidor(verificadorServidor);
+                    localizarServidor();
+                    iniciarVerificadorServidor();
+                }
                 break;
             case 4:
                 encerrar();
