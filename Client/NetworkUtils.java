@@ -23,12 +23,12 @@ public class NetworkUtils {
         System.out.println(resposta);
     }
 
-    public static Servidor verificarServidorDisponivel(DatagramSocket socket, InetAddress enderecoServidor,
-                                                       int portaServidor) throws IOException {
-        String mensagemSolicitacao = "heartbeat";
+    public static boolean verificarServidorDisponivel(DatagramSocket socket, InetAddress grupo, int portaServidor)
+            throws IOException {
+        String mensagemSolicitacao = "IS_SERVER_ON";
         byte[] bufferSolicitacao = mensagemSolicitacao.getBytes();
-        DatagramPacket pacoteSolicitacao = new DatagramPacket(bufferSolicitacao, bufferSolicitacao.length,
-                enderecoServidor, portaServidor);
+        DatagramPacket pacoteSolicitacao = new DatagramPacket(bufferSolicitacao, bufferSolicitacao.length, grupo,
+                portaServidor);
 
         try {
             socket.send(pacoteSolicitacao);
@@ -39,14 +39,9 @@ public class NetworkUtils {
             socket.receive(pacoteResposta);
             String resposta = new String(pacoteResposta.getData(), 0, pacoteResposta.getLength());
 
-            if (resposta.equals("heartbeat")) {
-                return new Servidor(enderecoServidor, portaServidor);
-            }
-
+            return resposta.equals("HEARTBEAT");
         } catch (IOException e) {
-            return null;
+            return false;
         }
-
-        return null;
     }
 }

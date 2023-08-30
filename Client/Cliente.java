@@ -11,12 +11,16 @@ import java.util.Scanner;
 import Server.Servidor;
 
 public class Cliente {
-    private DatagramSocket multicastSocket;
-    private InetAddress enderecoServidor;
-    private int portaServidor;
+    private DatagramSocket multicastSocket = null;
+    private InetAddress enderecoServidor = null;
+    private int portaServidor = -1;
+    VerificadorServidor verificadorServidor = null;
+
+    private static final String ANSI_RESET = "\u001B[0m";
+    private static final String ANSI_CYAN = "\u001B[36m";
+    private static final String ANSI_YELLOW = "\u001B[33m";
 
     public void iniciar() {
-        System.out.println("entrou");
         try {
             inicializarMulticastSocket();
             localizarServidor();
@@ -57,16 +61,16 @@ public class Cliente {
         for (int multicastPort : portasServidores) {
             multicastSocket.joinGroup(new InetSocketAddress(enderecoGrupo, multicastPort), networkInterface);
 
-            Servidor servidor = NetworkUtils.verificarServidorDisponivel(multicastSocket, enderecoGrupo, multicastPort);
+            boolean isOn = NetworkUtils.verificarServidorDisponivel(multicastSocket, enderecoGrupo, multicastPort);
 
             multicastSocket.leaveGroup(new InetSocketAddress(enderecoGrupo, multicastPort), networkInterface);
 
-            if (servidor != null) {
-                enderecoServidor = servidor.getEndereco();
-                portaServidor = servidor.getPorta();
+            if (isOn == true) {
+                enderecoServidor = enderecoGrupo;
+                portaServidor = multicastPort;
                 System.out.println("Servidor disponível no endereço: " + enderecoServidor.getHostAddress() + ", porta: "
                         + portaServidor);
-                break; // Encerra o loop caso encontre um servidor disponível
+                break; // Encerra o loop caso encontre umc servidor disponível
             }
         }
 
@@ -78,30 +82,79 @@ public class Cliente {
         }
     }
 
+    // private static void conectarAoServidor(DatagramSocket multicastSocket,
+    // InetAddress grupo) {
+    // try {
+    // System.out.println("Servidor indisponível. Aguarde, tentando conexão...");
+    // portaServidor = -1;
+
+    // while (true) {
+    // boolean servidorEncontrado = false;
+    // for (int porta : portasServidores) {
+    // try {
+    // if (verificarServidorDisponivel(multicastSocket, grupo, porta)) {
+    // portaServidor = porta;
+    // servidorEncontrado = true;
+    // break;
+    // }
+    // } catch (IOException e) {
+    // }
+    // }
+
+    // if (!servidorEncontrado) {
+    // System.out.println("Nenhum servidor disponível. Tentando novamente em 5
+    // segundos...");
+    // Thread.sleep(5000);
+    // } else {
+    // break;
+    // }
+    // }
+    // } catch (InterruptedException e) {
+    // e.printStackTrace();
+    // }
+    // }
+
     private void iniciarVerificadorServidor() {
-        VerificadorServidor verificadorServidor = new VerificadorServidor(multicastSocket, enderecoServidor,
+        verificadorServidor = new VerificadorServidor(multicastSocket, enderecoServidor,
                 portaServidor);
         verificadorServidor.start();
     }
 
-    private void exibirMenu() {
-        System.out.println("");
-        System.out.println("Bem-vindo ao Sistema de Reservas de Salas de Estudo!");
-        System.out.println("Digite 1 para visualizar disponibilidade das salas");
-        System.out.println("Digite 2 para fazer uma reserva");
-        System.out.println("Digite 3 para cancelar uma reserva");
-        System.out.println("Digite 4 para sair");
+    private void encerrarVerificadorServidor(Thread verificadorServidor) {
+        if (verificadorServidor != null && verificadorServidor.isAlive()) {
+            verificadorServidor.interrupt();
+            try {
+                verificadorServidor.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
-    private void processarOpcao(int opcao, Scanner scanner) throws IOException {
+    private void exibirMenu() {
+        System.out.println(" ");
+        System.out.println(ANSI_CYAN + "Bem-vindo ao Sistema de Reservas de Salas de Estudo!" + ANSI_RESET);
+        System.out.println(ANSI_YELLOW + "Digite 1 para visualizar disponibilidade das salas");
+        System.out.println("Digite 2 para fazer uma reserva");
+        System.out.println("Digite 3 para cancelar uma reserva");
+        System.out.println("Digite 4 para sair" + ANSI_RESET);
+
+    }
+
+    private void processarOpcao(int opcao, Scanner scanner) throws IOException, InterruptedException {
         switch (opcao) {
             case 1:
                 if (NetworkUtils.verificarServidorDisponivel(multicastSocket, enderecoServidor,
-                        portaServidor) != null) {
+                        portaServidor)) {
                     NetworkUtils.enviarMensagem("CONSULTAR_DISPONIBILIDADE", multicastSocket, enderecoServidor,
                             portaServidor);
                     NetworkUtils.receberResposta(multicastSocket);
+                } else {
+                    encerrarVerificadorServidor(verificadorServidor);
+                    localizarServidor();
+                    iniciarVerificadorServidor();
                 }
+
                 break;
             case 2:
                 System.out.print("Digite o número da sala desejada: ");
@@ -115,7 +168,7 @@ public class Cliente {
                 System.out.print("Digite seu cpf: ");
                 String cpf = scanner.nextLine();
                 if (NetworkUtils.verificarServidorDisponivel(multicastSocket, enderecoServidor,
-                        portaServidor) != null) {
+                        portaServidor)) {
                     NetworkUtils.enviarMensagem(
                             "FAZER_RESERVA " + numeroSala + " " + horario + " " + nome + " " + sobrenome + " "
                                     + cpf,
