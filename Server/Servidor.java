@@ -26,33 +26,39 @@ public class Servidor {
         salas.put(2, new Sala(2));
         salas.put(3, new Sala(3));
 
-        String mensagemRecebida = Middleware.receberMensagemDoCliente();
-        String[] partesMensagem = mensagemRecebida.split(" ");
-        String operacao = partesMensagem[0];
+        while (true) {
+            String mensagemRecebida = Middleware.receberMensagemDoCliente();
+            if (mensagemRecebida.equals("null")){
+                continue;
+            }
+            String[] partesMensagem = mensagemRecebida.split(" ");
+            String operacao = partesMensagem[0];
 
-        if (operacao.equals("CONSULTAR_DISPONIBILIDADE")) {
-            consultarDisponibilidade();
-        }
 
-        else if (operacao.equals("FAZER_RESERVA")) {
-            int numeroSala = Integer.parseInt(partesMensagem[1]);
-            String horario = partesMensagem[2];
-            String nome = partesMensagem[3];
-            String sobrenome = partesMensagem[4];
-            String cpf = partesMensagem[5];
-            Usuario usuario = new Usuario(nome, sobrenome, cpf);
-            fazerReserva(numeroSala, horario, usuario);
-        }
+            if (operacao.equals("CONSULTAR_DISPONIBILIDADE")) {
+                consultarDisponibilidade();
+            }
 
-        else if (operacao.equals("CANCELAR_RESERVA")) {
-            int numeroSala = Integer.parseInt(partesMensagem[1]);
-            String horario = partesMensagem[2];
-            String cpf = partesMensagem[3];
-            cancelarReserva(numeroSala, horario, cpf);
-        }
+            else if (operacao.equals("FAZER_RESERVA")) {
+                int numeroSala = Integer.parseInt(partesMensagem[1]);
+                String horario = partesMensagem[2];
+                String nome = partesMensagem[3];
+                String sobrenome = partesMensagem[4];
+                String cpf = partesMensagem[5];
+                Usuario usuario = new Usuario(nome, sobrenome, cpf);
+                fazerReserva(numeroSala, horario, usuario);
+            }
 
-        else if (operacao.equals("ATUALIZAR_RESERVAS")) {
-            atualizarReservas(mensagemRecebida.substring(19));
+            else if (operacao.equals("CANCELAR_RESERVA")) {
+                int numeroSala = Integer.parseInt(partesMensagem[1]);
+                String horario = partesMensagem[2];
+                String cpf = partesMensagem[3];
+                cancelarReserva(numeroSala, horario, cpf);
+            }
+
+            else if (operacao.equals("ATUALIZAR_RESERVAS")) {
+                atualizarReservas(mensagemRecebida.substring(19));
+            }
         }
 
     }
@@ -109,7 +115,8 @@ public class Servidor {
                 .append(novaReserva.getUsuario().getCpf()).append(" ")
                 .append("\n");
 
-        Middleware.enviarMensagemParaCliente("Reserva da Sala " + numeroSala + " feita para " + horario + " por " + usuario.getNome().concat(" ").concat(usuario.getSobrenome()));
+        Middleware.enviarMensagemParaCliente("Reserva da Sala " + numeroSala + " feita para " + horario + " por "
+                + usuario.getNome().concat(" ").concat(usuario.getSobrenome()));
         enviarDadosParaOutroServidor();
     }
 
@@ -146,7 +153,8 @@ public class Servidor {
 
             enviarDadosParaOutroServidor();
         } else {
-            Middleware.enviarMensagemParaCliente("Não foi encontrada uma reserva da Sala " + numeroSala + " para " + horario + " associada ao cpf fornecido.");
+            Middleware.enviarMensagemParaCliente("Não foi encontrada uma reserva da Sala " + numeroSala + " para "
+                    + horario + " associada ao cpf fornecido.");
         }
     }
 

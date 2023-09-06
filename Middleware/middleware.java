@@ -45,7 +45,8 @@ public class Middleware {
             throws IOException {
         String mensagemSolicitacao = "IS_SERVER_ON";
         byte[] bufferSolicitacao = mensagemSolicitacao.getBytes();
-        DatagramPacket pacoteSolicitacao = new DatagramPacket(bufferSolicitacao, bufferSolicitacao.length, enderecoServidor, portaServidor);
+        DatagramPacket pacoteSolicitacao = new DatagramPacket(bufferSolicitacao, bufferSolicitacao.length,
+                enderecoServidor, portaServidor);
 
         try {
             multicastSocketClient.send(pacoteSolicitacao);
@@ -155,38 +156,37 @@ public class Middleware {
             InetSocketAddress enderecoDestino = new InetSocketAddress(enderecoServidor, portaOutroServidor);
             enviarMensagemServidorOnline(enderecoDestino);
 
-            while (true) {
-                DatagramPacket pacote = new DatagramPacket(buffer, buffer.length);
-                portaCliente = pacote.getPort();
+            DatagramPacket pacote = new DatagramPacket(buffer, buffer.length);
 
-                multicastSocketServer.receive(pacote);
-                String mensagemRecebida = new String(pacote.getData(), 0, pacote.getLength());
-                System.out.println("Mensagem recebida: " + mensagemRecebida);
+            multicastSocketServer.receive(pacote);
+            String mensagemRecebida = new String(pacote.getData(), 0, pacote.getLength());
+            System.out.println("Mensagem recebida: " + mensagemRecebida);
 
-                String[] partesMensagem = mensagemRecebida.split(" ");
-                String operacao = partesMensagem[0];
+            portaCliente = pacote.getPort();
 
-                if (mensagemRecebida.equals("SERVER_ONLINE")) {
-                    System.out.println("Recebida mensagem de servidor online do outro servidor.");
-                    // enviarDadosParaOutroServidor();
-                } else if (operacao.equals("IS_SERVER_ON")) {
-                    String mensagem = "HEARTBEAT";
-                    enviarMensagemParaCliente(mensagem);
-                } else if (operacao.equals("SAIR")) {
-                    multicastSocketServer.leaveGroup(new InetSocketAddress(enderecoServidor, portaRunServer),
-                            networkInterface);
-                    multicastSocketServer.close();
-                    System.out.println("Servidor encerrado.");
-                    break;
-                } else {
-                    return mensagemRecebida;
-                }
+            String[] partesMensagem = mensagemRecebida.split(" ");
+            String operacao = partesMensagem[0];
+
+            if (mensagemRecebida.equals("SERVER_ONLINE")) {
+                System.out.println("Recebida mensagem de servidor online do outro servidor.");
+                // enviarDadosParaOutroServidor();
+            } else if (operacao.equals("IS_SERVER_ON")) {
+                String mensagem = "HEARTBEAT";
+                enviarMensagemParaCliente(mensagem);
+            } else if (operacao.equals("SAIR")) {
+                multicastSocketServer.leaveGroup(new InetSocketAddress(enderecoServidor, portaRunServer),
+                        networkInterface);
+                multicastSocketServer.close();
+                System.out.println("Servidor encerrado.");
+            } else {
+                return mensagemRecebida;
             }
+
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
+            return "null";
         }
-        return null;
+        return "null";
 
     }
 
