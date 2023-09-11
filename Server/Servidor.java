@@ -25,6 +25,10 @@ public class Servidor {
 
         Middleware.definirServidor(porta);
 
+        processarOpcao();
+    }
+
+    private static void processarOpcao(){
         while (true) {
             DatagramPacket pacote = Middleware.receberMensagemDoCliente();
 
@@ -65,7 +69,6 @@ public class Servidor {
             }
 
         }
-
     }
 
     private static void consultarDisponibilidade() {
