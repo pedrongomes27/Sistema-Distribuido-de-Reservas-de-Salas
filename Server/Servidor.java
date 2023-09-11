@@ -1,9 +1,6 @@
 package Server;
 
-import java.io.IOException;
 import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,6 +10,7 @@ public class Servidor {
     private static Map<Integer, Sala> salas = new HashMap<>();
     private static Map<Integer, Reserva> reservas = new HashMap<>();
     private static int proximoIdReserva = 1;
+    private static int porta = 1111;
 
     private static StringBuilder reservasReplicadas = new StringBuilder();
 
@@ -21,21 +19,27 @@ public class Servidor {
     public static final String ANSI_GREEN = "\u001B[32m";
 
     public static void main(String[] args) {
-        // Criação de algumas salas fictícias para demonstração
         salas.put(1, new Sala(1));
         salas.put(2, new Sala(2));
         salas.put(3, new Sala(3));
 
+        Middleware.definirServidor(porta);
+
         while (true) {
-            String mensagemRecebida = Middleware.receberMensagemDoCliente();
-            if (mensagemRecebida.equals("null")){
-                continue;
-            }
+            DatagramPacket pacote = Middleware.receberMensagemDoCliente();
+
+            String mensagemRecebida = new String(pacote.getData(), 0, pacote.getLength());
+            System.out.println("Mensagem recebida: " + mensagemRecebida);
+
             String[] partesMensagem = mensagemRecebida.split(" ");
             String operacao = partesMensagem[0];
 
+            if (operacao.equals("SERVER_ONLINE")) {
+                System.out.println("Recebida mensagem de servidor online do outro servidor.");
+                replicarDados();
+            }
 
-            if (operacao.equals("CONSULTAR_DISPONIBILIDADE")) {
+            else if (operacao.equals("CONSULTAR_DISPONIBILIDADE")) {
                 consultarDisponibilidade();
             }
 
@@ -59,6 +63,7 @@ public class Servidor {
             else if (operacao.equals("ATUALIZAR_RESERVAS")) {
                 atualizarReservas(mensagemRecebida.substring(19));
             }
+
         }
 
     }
@@ -88,7 +93,7 @@ public class Servidor {
         }
 
         Middleware.enviarMensagemParaCliente(resposta.toString());
-        enviarDadosParaOutroServidor();
+        replicarDados();
     }
 
     private static void fazerReserva(int numeroSala, String horario, Usuario usuario) {
@@ -115,9 +120,10 @@ public class Servidor {
                 .append(novaReserva.getUsuario().getCpf()).append(" ")
                 .append("\n");
 
-        Middleware.enviarMensagemParaCliente("Reserva da Sala " + numeroSala + " feita para " + horario + " por "
-                + usuario.getNome().concat(" ").concat(usuario.getSobrenome()));
-        enviarDadosParaOutroServidor();
+        Middleware.enviarMensagemParaCliente(
+                "Reserva da Sala " + numeroSala + " feita para " + horario + " por "
+                        + usuario.getNome().concat(" ").concat(usuario.getSobrenome()));
+        replicarDados();
     }
 
     private static void cancelarReserva(int numeroSala, String horario, String cpf) {
@@ -151,10 +157,11 @@ public class Servidor {
 
             reservasReplicadas = reservasAtualizadas;
 
-            enviarDadosParaOutroServidor();
+            replicarDados();
         } else {
-            Middleware.enviarMensagemParaCliente("Não foi encontrada uma reserva da Sala " + numeroSala + " para "
-                    + horario + " associada ao cpf fornecido.");
+            Middleware.enviarMensagemParaCliente(
+                    "Não foi encontrada uma reserva da Sala " + numeroSala + " para " + horario
+                            + " associada ao cpf fornecido.");
         }
     }
 
@@ -185,48 +192,7 @@ public class Servidor {
         proximoIdReserva = maiorIdReserva + 1;
     }
 
-    // private static void enviarMensagem(String mensagem, InetSocketAddress
-    // enderecoCliente) {
-    // try {
-    // DatagramSocket socket = new DatagramSocket();
-    // byte[] buffer = mensagem.getBytes();
-    // DatagramPacket pacote = new DatagramPacket(buffer, buffer.length,
-    // enderecoCliente.getAddress(),
-    // enderecoCliente.getPort());
-
-    // // Inicia uma nova thread para enviar a resposta ao cliente
-    // // Thread enviarThread = new Thread(() -> {
-    // try {
-    // socket.send(pacote);
-    // socket.close();
-    // System.out.println("Resposta enviada para o cliente.");
-    // } catch (IOException e) {
-    // e.printStackTrace();
-    // }
-    // // });
-
-    // // enviarThread.start();
-    // } catch (IOException e) {
-    // e.printStackTrace();
-    // }
-    // }
-
-    // private static void enviarMensagemServidorOnline(InetSocketAddress
-    // enderecoDestino) {
-    // try {
-    // String mensagem = "SERVER_ONLINE";
-    // byte[] buffer = mensagem.getBytes();
-    // DatagramSocket socket = new DatagramSocket();
-    // DatagramPacket pacote = new DatagramPacket(buffer, buffer.length,
-    // enderecoDestino);
-    // socket.send(pacote);
-    // socket.close();
-    // } catch (IOException e) {
-    // e.printStackTrace();
-    // }
-    // }
-
-    private static void enviarDadosParaOutroServidor() {
+    public static void replicarDados() {
         StringBuilder dados = new StringBuilder();
         StringBuilder reservasJaEnviadas = new StringBuilder();
 
@@ -248,21 +214,8 @@ public class Servidor {
         reservasReplicadas = dados;
 
         if (!dados.toString().isEmpty()) {
-            try {
-                String grupo = "239.10.10.11";
-                int porta = 2222;
-
-                MulticastSocket multicastSocket = new MulticastSocket();
-                InetAddress grupoAddr = InetAddress.getByName(grupo);
-
-                byte[] buffer = ("ATUALIZAR_RESERVAS " + reservasReplicadas.toString()).getBytes();
-                DatagramPacket pacote = new DatagramPacket(buffer, buffer.length, grupoAddr, porta);
-                multicastSocket.send(pacote);
-
-                multicastSocket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            String mensagem = ("ATUALIZAR_RESERVAS " + reservasReplicadas.toString());
+            Middleware.enviarMensagemEntreServidor(mensagem, porta);
         }
     }
 }

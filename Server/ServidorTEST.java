@@ -1,131 +1,74 @@
 package Server;
 
-import java.io.IOException;
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.MulticastSocket;
-import java.net.NetworkInterface;
 import java.util.HashMap;
 import java.util.Map;
+
+import Middleware.Middleware;
 
 public class ServidorTEST {
     private static Map<Integer, Sala> salas = new HashMap<>();
     private static Map<Integer, Reserva> reservas = new HashMap<>();
     private static int proximoIdReserva = 1;
-    private InetAddress endereco;
-    private int porta;
+    private static int porta = 2222;
+
     private static StringBuilder reservasReplicadas = new StringBuilder();
 
     public static final String ANSI_RESET = "\u001B[0m";
     public static final String ANSI_RED = "\u001B[31m";
     public static final String ANSI_GREEN = "\u001B[32m";
 
-    public ServidorTEST(InetAddress endereco, int porta) {
-        this.endereco = endereco;
-        this.porta = porta;
-    }
-
-    public InetAddress getEndereco() {
-        return endereco;
-    }
-
-    public int getPorta() {
-        return porta;
-    }
-
     public static void main(String[] args) {
-        // Criação de algumas salas fictícias para demonstração
         salas.put(1, new Sala(1));
         salas.put(2, new Sala(2));
         salas.put(3, new Sala(3));
 
-        try {
-            String grupo = "239.10.10.11";
-            int porta = 2222;
+        Middleware.definirServidor(porta);
 
-            MulticastSocket multicastSocket = new MulticastSocket(null);
-            multicastSocket.bind(new InetSocketAddress(porta));
-            NetworkInterface networkInterface = NetworkInterface.getByName("wlan0");
-            multicastSocket.joinGroup(new InetSocketAddress(grupo, porta), networkInterface);
+        while (true) {
+            DatagramPacket pacote = Middleware.receberMensagemDoCliente();
 
-            byte[] buffer = new byte[1024];
+            String mensagemRecebida = new String(pacote.getData(), 0, pacote.getLength());
+            System.out.println("Mensagem recebida: " + mensagemRecebida);
 
-            System.out.println("Servidor Multicast iniciado. Aguardando mensagem...");
+            String[] partesMensagem = mensagemRecebida.split(" ");
+            String operacao = partesMensagem[0];
 
-            int portaOutroServidor = 1111;
-            InetSocketAddress enderecoDestino = new InetSocketAddress(grupo, portaOutroServidor);
-            enviarMensagemServidorOnline(enderecoDestino);
-
-            while (true) {
-                DatagramPacket pacote = new DatagramPacket(buffer, buffer.length);
-                multicastSocket.receive(pacote);
-                String mensagemRecebida = new String(pacote.getData(), 0, pacote.getLength());
-                System.out.println("Mensagem recebida: " + mensagemRecebida);
-
-                String[] partesMensagem = mensagemRecebida.split(" ");
-                String operacao = partesMensagem[0];
-
-                if (mensagemRecebida.equals("SERVER_ONLINE")) {
-                    System.out.println("Recebida mensagem de servidor online do outro servidor.");
-                    enviarDadosParaOutroServidor();
-                }
-
-                else if (operacao.equals("IS_SERVER_ON")) {
-                    try {
-                        byte[] resposta = "HEARTBEAT".getBytes();
-                        DatagramSocket socket = new DatagramSocket();
-                        DatagramPacket pacoteResposta = new DatagramPacket(resposta, resposta.length,
-                                pacote.getAddress(), pacote.getPort());
-                        socket.send(pacoteResposta);
-                        socket.close();
-                        System.out.println("Resposta enviada para o cliente.");
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                else if (operacao.equals("CONSULTAR_DISPONIBILIDADE")) {
-                    consultarDisponibilidade(new InetSocketAddress(pacote.getAddress(), pacote.getPort()));
-                }
-
-                else if (operacao.equals("FAZER_RESERVA")) {
-                    int numeroSala = Integer.parseInt(partesMensagem[1]);
-                    String horario = partesMensagem[2];
-                    String nome = partesMensagem[3];
-                    String sobrenome = partesMensagem[4];
-                    String cpf = partesMensagem[5];
-                    Usuario usuario = new Usuario(nome, sobrenome, cpf);
-                    fazerReserva(numeroSala, horario, usuario,
-                            new InetSocketAddress(pacote.getAddress(), pacote.getPort()));
-                }
-
-                else if (operacao.equals("CANCELAR_RESERVA")) {
-                    int numeroSala = Integer.parseInt(partesMensagem[1]);
-                    String horario = partesMensagem[2];
-                    String cpf = partesMensagem[3];
-                    cancelarReserva(numeroSala, horario, cpf,
-                            new InetSocketAddress(pacote.getAddress(), pacote.getPort()));
-                }
-                
-                else if (operacao.equals("ATUALIZAR_RESERVAS")) {
-                    atualizarReservas(mensagemRecebida.substring(19)); 
-                }
-
-                else if (operacao.equals("SAIR")) {
-                    multicastSocket.leaveGroup(new InetSocketAddress(grupo, porta), networkInterface);
-                    multicastSocket.close();
-                    System.out.println("Servidor encerrado.");
-                    break;
-                }
+            if (operacao.equals("SERVER_ONLINE")) {
+                System.out.println("Recebida mensagem de servidor online do outro servidor.");
+                replicarDados();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+
+            else if (operacao.equals("CONSULTAR_DISPONIBILIDADE")) {
+                consultarDisponibilidade();
+            }
+
+            else if (operacao.equals("FAZER_RESERVA")) {
+                int numeroSala = Integer.parseInt(partesMensagem[1]);
+                String horario = partesMensagem[2];
+                String nome = partesMensagem[3];
+                String sobrenome = partesMensagem[4];
+                String cpf = partesMensagem[5];
+                Usuario usuario = new Usuario(nome, sobrenome, cpf);
+                fazerReserva(numeroSala, horario, usuario);
+            }
+
+            else if (operacao.equals("CANCELAR_RESERVA")) {
+                int numeroSala = Integer.parseInt(partesMensagem[1]);
+                String horario = partesMensagem[2];
+                String cpf = partesMensagem[3];
+                cancelarReserva(numeroSala, horario, cpf);
+            }
+
+            else if (operacao.equals("ATUALIZAR_RESERVAS")) {
+                atualizarReservas(mensagemRecebida.substring(19));
+            }
+
         }
+
     }
 
-    private static void consultarDisponibilidade(InetSocketAddress enderecoCliente) {
+    private static void consultarDisponibilidade() {
         StringBuilder resposta = new StringBuilder("Salas disponíveis:\n");
         boolean encontrouReserva;
 
@@ -149,16 +92,15 @@ public class ServidorTEST {
             }
         }
 
-        enviarMensagem(resposta.toString(), enderecoCliente);
-        enviarDadosParaOutroServidor();
+        Middleware.enviarMensagemParaCliente(resposta.toString());
+        replicarDados();
     }
 
-    private static void fazerReserva(int numeroSala, String horario, Usuario usuario,
-            InetSocketAddress enderecoCliente) {
+    private static void fazerReserva(int numeroSala, String horario, Usuario usuario) {
         // Verificar se a sala já está reservada no horário especificado
         for (Reserva reserva : reservas.values()) {
             if (reserva.getNumeroSala() == numeroSala && reserva.getHorario().equals(horario)) {
-                enviarMensagem("Sala " + numeroSala + " já está reservada para " + horario, enderecoCliente);
+                Middleware.enviarMensagemParaCliente("Sala " + numeroSala + " já está reservada para " + horario);
                 return; // Encerrar a função, pois a sala já está reservada
             }
         }
@@ -178,15 +120,13 @@ public class ServidorTEST {
                 .append(novaReserva.getUsuario().getCpf()).append(" ")
                 .append("\n");
 
-        enviarMensagem(
+        Middleware.enviarMensagemParaCliente(
                 "Reserva da Sala " + numeroSala + " feita para " + horario + " por "
-                        + usuario.getNome().concat(" ").concat(usuario.getSobrenome()),
-                enderecoCliente);
-        enviarDadosParaOutroServidor();
-    }
+                        + usuario.getNome().concat(" ").concat(usuario.getSobrenome()));
+                        replicarDados();
+                    }
 
-    private static void cancelarReserva(int numeroSala, String horario, String cpf,
-            InetSocketAddress enderecoCliente) {
+    private static void cancelarReserva(int numeroSala, String horario, String cpf) {
         boolean encontrouReserva = false;
         int idReserva = 0; // Inicializamos com um valor inválido
 
@@ -201,7 +141,8 @@ public class ServidorTEST {
         }
 
         if (encontrouReserva) {
-            enviarMensagem("Reserva da Sala " + numeroSala + " para " + horario + " foi cancelada.", enderecoCliente);
+            Middleware.enviarMensagemParaCliente(
+                    "Reserva da Sala " + numeroSala + " para " + horario + " foi cancelada.");
 
             // Remover a reserva cancelada da variável reservasReplicadas
             StringBuilder reservasAtualizadas = new StringBuilder();
@@ -216,10 +157,11 @@ public class ServidorTEST {
 
             reservasReplicadas = reservasAtualizadas;
 
-            enviarDadosParaOutroServidor();
+            replicarDados();
         } else {
-            enviarMensagem("Não foi encontrada uma reserva da Sala " + numeroSala + " para " + horario
-                    + " associada ao cpf fornecido.", enderecoCliente);
+            Middleware.enviarMensagemParaCliente(
+                    "Não foi encontrada uma reserva da Sala " + numeroSala + " para " + horario
+                            + " associada ao cpf fornecido.");
         }
     }
 
@@ -250,44 +192,7 @@ public class ServidorTEST {
         proximoIdReserva = maiorIdReserva + 1;
     }
 
-    private static void enviarMensagem(String mensagem, InetSocketAddress enderecoCliente) {
-        try {
-            DatagramSocket socket = new DatagramSocket();
-            byte[] buffer = mensagem.getBytes();
-            DatagramPacket pacote = new DatagramPacket(buffer, buffer.length, enderecoCliente.getAddress(),
-                    enderecoCliente.getPort());
-
-            // Inicia uma nova thread para enviar a resposta ao cliente
-            // Thread enviarThread = new Thread(() -> {
-                try {
-                    socket.send(pacote);
-                    socket.close();
-                    System.out.println("Resposta enviada para o cliente.");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            // });
-
-            // enviarThread.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static void enviarMensagemServidorOnline(InetSocketAddress enderecoDestino) {
-        try {
-            String mensagem = "SERVER_ONLINE";
-            byte[] buffer = mensagem.getBytes();
-            DatagramSocket socket = new DatagramSocket();
-            DatagramPacket pacote = new DatagramPacket(buffer, buffer.length, enderecoDestino);
-            socket.send(pacote);
-            socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static void enviarDadosParaOutroServidor() {
+    public static void replicarDados() {
         StringBuilder dados = new StringBuilder();
         StringBuilder reservasJaEnviadas = new StringBuilder();
 
@@ -309,21 +214,8 @@ public class ServidorTEST {
         reservasReplicadas = dados;
 
         if (!dados.toString().isEmpty()) {
-            try {
-                String grupo = "239.10.10.11";
-                int porta = 1111;
-
-                MulticastSocket multicastSocket = new MulticastSocket();
-                InetAddress grupoAddr = InetAddress.getByName(grupo);
-
-                byte[] buffer = ("ATUALIZAR_RESERVAS " + reservasReplicadas.toString()).getBytes();
-                DatagramPacket pacote = new DatagramPacket(buffer, buffer.length, grupoAddr, porta);
-                multicastSocket.send(pacote);
-
-                multicastSocket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            String mensagem = ("ATUALIZAR_RESERVAS " + reservasReplicadas.toString());
+            Middleware.enviarMensagemEntreServidor(mensagem, porta);
         }
     }
 }
