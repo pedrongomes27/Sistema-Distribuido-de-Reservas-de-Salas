@@ -10,6 +10,27 @@ public class Cliente {
     private static final String ANSI_CYAN = "\u001B[36m";
     private static final String ANSI_YELLOW = "\u001B[33m";
 
+    public static void main(String[] args) {
+        try {
+            Middleware.inicializarMulticastSocket();
+            Middleware.localizarServidor();
+            Middleware.iniciarVerificadorServidor();
+
+            Scanner scanner = new Scanner(System.in);
+            while (true) {
+                exibirMenu();
+                int opcao = Integer.parseInt(scanner.nextLine());
+                processarOpcao(opcao, scanner);
+            }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            System.out.println("---- | Erro inesperado! | ----");
+            Middleware.encerrarCliente();
+        }
+    }
+
+    
     public static void exibirMenu() {
         System.out.println(" ");
         System.out.println(

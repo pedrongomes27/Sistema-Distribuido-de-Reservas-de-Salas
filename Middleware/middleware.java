@@ -10,6 +10,8 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
 import java.util.Scanner;
+import java.util.HashMap;
+import java.util.Map;
 
 import Client.VerificadorServidor;
 import Client.Cliente;
@@ -21,9 +23,8 @@ public class Middleware {
     private static int portaServidor = -1;
     private static VerificadorServidor verificadorServidor = null;
     private static int[] portasServidores = { 1111, 2222 };
-    // private static int[] connectionCount = { 0, 0 };
-
-    ;
+    private static int[] connectionCount = { 0, 0 };
+    private static Map<Integer, Integer> serverClientCounts = new HashMap<>();
 
     private static MulticastSocket multicastSocketServer = null;
     private static InetSocketAddress enderecoCliente = null;
@@ -72,64 +73,30 @@ public class Middleware {
 
     }
 
-    public static void localizarServidor() throws IOException, InterruptedException {
-        InetAddress enderecoGrupo = InetAddress.getByName("239.10.10.11");
+    // public static void localizarServidor() throws IOException, InterruptedException {
+    //     InetAddress enderecoGrupo = InetAddress.getByName("239.10.10.11");
 
-        // int[] portasServidores = { 1111, 2222 };
+    //     // int[] portasServidores = { 1111, 2222 };
 
-        // int[] connectionCount = { 0, 0 }; // {(COUNT SERVER1), (COUNT SERVER2)}
+    //     // int[] connectionCount = { 0, 0 }; // {(COUNT SERVER1), (COUNT SERVER2)}
 
-        for (int multicastPort : portasServidores) {
-            multicastSocketClient.joinGroup(new InetSocketAddress(enderecoGrupo, multicastPort), networkInterface);
-
-            enderecoServidor = enderecoGrupo;
-            portaServidor = multicastPort;
-            boolean isOn = verificarServidorDisponivel();
-
-            multicastSocketClient.leaveGroup(new InetSocketAddress(enderecoGrupo, multicastPort), networkInterface);
-
-            if (isOn) {
-                // if(multicastPort < ){
-                System.out.println("Servidor disponível no endereço: " + enderecoServidor.getHostAddress() + ", porta: "
-                        + portaServidor + " (APENAS PARA FASE DEV)");
-                // connectionCount;
-                break;
-                // }
-
-            } else {
-                enderecoServidor = null;
-                portaServidor = -1;
-            }
-        }
-
-        if (enderecoServidor == null) {
-            System.out.println("Nenhum servidor disponível. Tentando novamente...");
-            localizarServidor();
-        }
-    }
-
-    // public static void localizarServidorAtt() throws IOException, InterruptedException{
-    //  InetAddress enderecoGrupo = InetAddress.getByName("239.10.10.11");
-        
-    //     // Loop through the available servers
     //     for (int multicastPort : portasServidores) {
-    //         // Join the multicast group and check server availability
     //         multicastSocketClient.joinGroup(new InetSocketAddress(enderecoGrupo, multicastPort), networkInterface);
+
     //         enderecoServidor = enderecoGrupo;
     //         portaServidor = multicastPort;
     //         boolean isOn = verificarServidorDisponivel();
+
     //         multicastSocketClient.leaveGroup(new InetSocketAddress(enderecoGrupo, multicastPort), networkInterface);
-            
+
     //         if (isOn) {
-    //             // Update the client count for this server
-    //             int clientCount = serverClientCounts.getOrDefault(multicastPort, 0);
-    //             serverClientCounts.put(multicastPort, clientCount + 1);
-                
-    //             System.out.println("Servidor disponível no endereço: " + enderecoServidor.getHostAddress() +
-    //                                ", porta: " + portaServidor + " (APENAS PARA FASE DEV)");
-                
-    //             // Connect to this server and break the loop
+    //             // if(multicastPort < ){
+    //             System.out.println("Servidor disponível no endereço: " + enderecoServidor.getHostAddress() + ", porta: "
+    //                     + portaServidor + " (APENAS PARA FASE DEV)");
+    //             // connectionCount;
     //             break;
+    //             // }
+
     //         } else {
     //             enderecoServidor = null;
     //             portaServidor = -1;
@@ -139,22 +106,61 @@ public class Middleware {
     //     if (enderecoServidor == null) {
     //         System.out.println("Nenhum servidor disponível. Tentando novamente...");
     //         localizarServidor();
-    //     } else {
-    //         // Determine which server has the least clients and connect to it
-    //         int minClientCount = Integer.MAX_VALUE;
-    //         int selectedServerPort = -1;
-            
-    //         for (Map.Entry<Integer, Integer> entry : serverClientCounts.entrySet()) {
-    //             if (entry.getValue() < minClientCount) {
-    //                 minClientCount = entry.getValue();
-    //                 selectedServerPort = entry.getKey();
-    //             }
-    //         }
-            
-    //         System.out.println("Connecting to the server with the least clients (Port: " + selectedServerPort + ")");
-    //         // Add your code to connect to the selected server here
     //     }
     // }
+
+    public static void localizarServidor() throws IOException, InterruptedException{
+     InetAddress enderecoGrupo = InetAddress.getByName("239.10.10.11");
+        
+        // Loop through the available servers
+        for (int multicastPort : portasServidores) {
+            // Join the multicast group and check server availability
+            multicastSocketClient.joinGroup(new InetSocketAddress(enderecoGrupo, multicastPort), networkInterface);
+            enderecoServidor = enderecoGrupo;
+            portaServidor = multicastPort;
+            boolean isOn = verificarServidorDisponivel();
+            multicastSocketClient.leaveGroup(new InetSocketAddress(enderecoGrupo, multicastPort), networkInterface);
+            
+            if (isOn) {
+                // Update the client count for this server
+                int clientCount = serverClientCounts.getOrDefault(multicastPort, 0);
+                serverClientCounts.put(multicastPort, clientCount + 1);
+                
+                System.out.println("Servidor disponível no endereço: " + enderecoServidor.getHostAddress() +
+                                   ", porta: " + portaServidor + " (APENAS PARA FASE DEV)");
+                
+                // Connect to this server and break the loop
+                break;
+            } else {
+                enderecoServidor = null;
+                portaServidor = -1;
+            }
+        }
+
+        if (enderecoServidor == null) {
+            System.out.println("Nenhum servidor disponível. Tentando novamente...");
+            localizarServidor();
+        } else {
+            // Determine which server has the least clients and connect to it
+            int minClientCount = Integer.MAX_VALUE;
+            System.out.println(minClientCount);
+            int selectedServerPort = -1;
+            
+            for (Map.Entry<Integer, Integer> entry : serverClientCounts.entrySet()) {
+                if (entry.getValue() < minClientCount) {
+                    minClientCount = entry.getValue();
+                    System.out.println(minClientCount);
+                    selectedServerPort = entry.getKey();
+                    System.out.println(selectedServerPort);
+                }
+            }
+            
+            System.out.println("Connecting to the server with the least clients (Port: " + selectedServerPort + ")");
+            portaServidor = selectedServerPort;
+            System.out.println(portaServidor);
+            // Add your code to connect to the selected server here
+        }
+    }
     
 
     // public static void verificarQntdConexao() throws IOException {
