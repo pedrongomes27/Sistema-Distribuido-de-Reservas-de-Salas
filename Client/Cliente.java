@@ -5,7 +5,7 @@ import java.util.Scanner;
 import Middleware.Middleware;
 
 public class Cliente {
-    
+
     private static final String ANSI_RESET = "\u001B[0m";
     private static final String ANSI_CYAN = "\u001B[36m";
     private static final String ANSI_YELLOW = "\u001B[33m";
@@ -30,15 +30,14 @@ public class Cliente {
         }
     }
 
-    
     public static void exibirMenu() {
         System.out.println(" ");
         System.out.println(
-                ANSI_CYAN +              "----- | Bem-vindo ao Sistema de Reservas de Salas de Estudo | -----" + ANSI_RESET);
+                ANSI_CYAN + "----- | Bem-vindo ao Sistema de Reservas de Salas de Estudo | -----" + ANSI_RESET);
         System.out.println(ANSI_YELLOW + "      | Digite: [1] para ver a disponibilidade das salas    |");
-        System.out.println(            "      | Digite: [2] para fazer uma reserva                  |");
-        System.out.println(            "      | Digite: [3] para cancelar uma reserva               |");
-        System.out.println(              "----- | Digite: [4] para sair                               | -----" + ANSI_RESET);
+        System.out.println("      | Digite: [2] para fazer uma reserva                  |");
+        System.out.println("      | Digite: [3] para cancelar uma reserva               |");
+        System.out.println("----- | Digite: [4] para sair                               | -----" + ANSI_RESET);
 
     }
 
@@ -48,12 +47,13 @@ public class Cliente {
                 if (Middleware.verificarServidorDisponivel()) {
                     Middleware.enviarMensagemParaServidor("CONSULTAR_DISPONIBILIDADE");
                     Middleware.receberRespostaDoServidor();
+                    Middleware.incrementarContador();
                 } else {
+                    Middleware.decrementarContador();
                     Middleware.encerrarVerificadorServidor();
                     Middleware.localizarServidor();
                     Middleware.iniciarVerificadorServidor();
                 }
-
                 break;
             case 2:
                 System.out.print("Digite o número da sala desejada: ");
@@ -67,11 +67,13 @@ public class Cliente {
                 System.out.print("Digite seu cpf: ");
                 String cpf = scanner.nextLine();
                 if (Middleware.verificarServidorDisponivel()) {
+                    Middleware.incrementarContador();
                     Middleware.enviarMensagemParaServidor(
                             "FAZER_RESERVA " + numeroSala + " " + horario + " " + nome + " " + sobrenome + " "
                                     + cpf);
                     Middleware.receberRespostaDoServidor();
                 } else {
+                    Middleware.decrementarContador();
                     Middleware.encerrarVerificadorServidor();
                     Middleware.localizarServidor();
                     Middleware.iniciarVerificadorServidor();
