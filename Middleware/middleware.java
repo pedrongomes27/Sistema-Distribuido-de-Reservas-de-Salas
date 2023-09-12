@@ -111,7 +111,11 @@ public class Middleware {
 
     public static void localizarServidor() throws IOException, InterruptedException{
      InetAddress enderecoGrupo = InetAddress.getByName("239.10.10.11");
-        
+     int selectedServerPort = -1;
+     int minClientCount = Integer.MAX_VALUE;
+
+     
+    
         // Loop through the available servers
         for (int multicastPort : portasServidores) {
             // Join the multicast group and check server availability
@@ -142,9 +146,7 @@ public class Middleware {
             localizarServidor();
         } else {
             // Determine which server has the least clients and connect to it
-            int minClientCount = Integer.MAX_VALUE;
-            System.out.println(minClientCount);
-            int selectedServerPort = -1;
+            System.out.println(serverClientCounts);
             
             for (Map.Entry<Integer, Integer> entry : serverClientCounts.entrySet()) {
                 if (entry.getValue() < minClientCount) {
