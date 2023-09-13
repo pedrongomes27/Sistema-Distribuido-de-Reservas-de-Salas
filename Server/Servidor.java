@@ -28,7 +28,7 @@ public class Servidor {
         processarOpcao();
     }
 
-    private static void processarOpcao() {
+    private static void processarOpcao(){
         while (true) {
             DatagramPacket pacote = Middleware.receberMensagemDoCliente();
 
@@ -72,10 +72,6 @@ public class Servidor {
 
             else if (operacao.equals("ATUALIZAR_RESERVAS")) {
                 atualizarReservas(mensagemRecebida.substring(19));
-            }
-
-            else if (operacao.equals("ZERAR_RESERVAS")) {
-                reservas.clear();
             }
 
             else if (operacao.equals("SAIR_CLIENTE")) {
@@ -169,22 +165,12 @@ public class Servidor {
             for (String reserva : reservasArray) {
                 if (!reserva.contains(reservaStr)) {
                     reservasAtualizadas.append(reserva).append("\n");
-                }
+                } 
             }
 
             reservasReplicadas = reservasAtualizadas;
 
-            boolean enviarZerarReservas = false;
-
-            if (reservasReplicadas.toString().isEmpty()) {
-                // Se reservasReplicadas estiver vazio, defina uma variável de controle
-                // para enviar "ZERAR_RESERVAS" na replicação
-                enviarZerarReservas = true;
-            } else {
-                enviarZerarReservas = false;
-            }
-
-            replicarDados(enviarZerarReservas);
+            replicarDados();
         } else {
             Middleware.enviarMensagemParaCliente(
                     "Não foi encontrada uma reserva da Sala " + numeroSala + " para " + horario
@@ -220,13 +206,9 @@ public class Servidor {
     }
 
     public static void replicarDados() {
-        replicarDados(false); // Chama a versão do método com o parâmetro definido como falso por padrão
-    }
-    
-    public static void replicarDados(boolean enviarZerarReservas) {
         StringBuilder dados = new StringBuilder();
         StringBuilder reservasJaEnviadas = new StringBuilder();
-    
+
         for (Reserva reserva : reservas.values()) {
             String idReservaStr = Integer.toString(reserva.getId());
             if (!reservasJaEnviadas.toString().contains(idReservaStr)) {
@@ -237,22 +219,16 @@ public class Servidor {
                         .append(reserva.getUsuario().getSobrenome()).append(" ")
                         .append(reserva.getUsuario().getCpf()).append(" ")
                         .append("\n");
-    
+
                 reservasJaEnviadas.append(idReservaStr).append(" ");
             }
         }
-    
+
         reservasReplicadas = dados;
-    
-        if (enviarZerarReservas) {
-            // Se enviarZerarReservas for verdadeiro, envie "ZERAR_RESERVAS"
-            String mensagem = "ZERAR_RESERVAS";
-            Middleware.enviarMensagemEntreServidor(mensagem, porta);
-        } else if (!dados.toString().isEmpty()) {
-            // Se enviarZerarReservas for falso e os dados não estiverem vazios, envie "ATUALIZAR_RESERVAS"
-            String mensagem = "ATUALIZAR_RESERVAS " + reservasReplicadas.toString();
+
+        if (!dados.toString().isEmpty()) {
+            String mensagem = ("ATUALIZAR_RESERVAS " + reservasReplicadas.toString());
             Middleware.enviarMensagemEntreServidor(mensagem, porta);
         }
     }
-    
 }
