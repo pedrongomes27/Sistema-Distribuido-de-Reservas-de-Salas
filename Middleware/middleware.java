@@ -323,54 +323,6 @@ public class Middleware {
                 enviarMensagemParaCliente(mensagem);
             }
 
-            // } else if (mensagemRecebida.startsWith("SERVER_COUNT:") ||
-            // mensagemRecebida.startsWith("CLIENT_PORT:")) {
-            // // A mensagem começa com "SERVER_COUNT:" ou "CLIENT_PORT:", então contém
-            // informações de contagem do servidor ou porta do cliente
-
-            // // Divida a mensagem com base na vírgula ","
-            // String[] parts = mensagemRecebida.split(",");
-
-            // for (String part : parts) {
-            // // Divida cada parte com base no sinal de igual "=" para obter a chave e o
-            // valor
-            // String[] keyValue = part.split("=");
-            // if (keyValue.length == 2) {
-            // String key = keyValue[0];
-            // String value = keyValue[1];
-            // System.out.println(value);
-
-            // // Verifique se a chave é "SERVER_COUNT" para atualizar a contagem do
-            // servidor
-            // if (key.startsWith("SERVER_COUNT")) {
-            // // O valor deve ser algo como "1111=1", onde 1111 é a porta do servidor e 1 é
-            // a contagem
-            // String[] serverInfo = key.split(":");
-            // System.out.println(serverInfo);
-            // // if (serverInfo.length == 2) {
-            // int serverPort = Integer.parseInt(serverInfo[1]);
-            // int serverCount = Integer.parseInt(value);
-            // System.out.println(serverPort);
-            // System.out.println(serverCount);
-            // // Atualize a contagem do servidor no mapa serverPorts
-            // serverPorts.put(serverPort, serverCount);
-            // // }
-            // }
-
-            // // Verifique se a chave é "CLIENT_PORT" para adicionar a porta do cliente
-            // if (key.startsWith("CLIENT_PORT")) {
-            // // O valor é a porta do cliente
-            // int clientPort = Integer.parseInt(value);
-
-            // // Adicione a porta do cliente ao conjunto clientPorts
-            // clientPorts.add(clientPort);
-            // }
-            // }
-            // }
-            // System.out.println("Recebido SERVER_COUNT - " + serverPorts);
-            // System.out.println("Recebido CLIENT_PORT - " + clientPorts);
-            // }
-
             else if (mensagemRecebida.startsWith("SERVER_COUNT:") || mensagemRecebida.startsWith("CLIENT_PORT:")) {
                 // A mensagem começa com "SERVER_COUNT:" ou "CLIENT_PORT:", então contém
                 // informações de contagem do servidor ou porta do cliente
@@ -559,10 +511,6 @@ public class Middleware {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public static int getEnderecoCliente() {
-        return enderecoCliente.getPort();
     }
 
 }

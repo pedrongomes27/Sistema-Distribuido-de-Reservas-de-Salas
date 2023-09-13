@@ -47,9 +47,7 @@ public class Cliente {
                 if (Middleware.verificarServidorDisponivel()) {
                     Middleware.enviarMensagemParaServidor("CONSULTAR_DISPONIBILIDADE");
                     Middleware.receberRespostaDoServidor();
-                    Middleware.incrementarContador();
                 } else {
-                    Middleware.decrementarContador();
                     Middleware.encerrarVerificadorServidor();
                     Middleware.localizarServidor();
                     Middleware.iniciarVerificadorServidor();
@@ -67,13 +65,12 @@ public class Cliente {
                 System.out.print("Digite seu cpf: ");
                 String cpf = scanner.nextLine();
                 if (Middleware.verificarServidorDisponivel()) {
-                    Middleware.incrementarContador();
                     Middleware.enviarMensagemParaServidor(
                             "FAZER_RESERVA " + numeroSala + " " + horario + " " + nome + " " + sobrenome + " "
                                     + cpf);
                     Middleware.receberRespostaDoServidor();
                 } else {
-                    Middleware.decrementarContador();
+                    
                     Middleware.encerrarVerificadorServidor();
                     Middleware.localizarServidor();
                     Middleware.iniciarVerificadorServidor();

@@ -45,6 +45,8 @@ public class ServidorTEST {
 
             else if (operacao.equals("CONSULTAR_DISPONIBILIDADE")) {
                 consultarDisponibilidade();
+                Middleware.incrementarContador();
+
             }
 
             else if (operacao.equals("FAZER_RESERVA")) {
@@ -55,6 +57,8 @@ public class ServidorTEST {
                 String cpf = partesMensagem[5];
                 Usuario usuario = new Usuario(nome, sobrenome, cpf);
                 fazerReserva(numeroSala, horario, usuario);
+                Middleware.incrementarContador();
+
             }
 
             else if (operacao.equals("CANCELAR_RESERVA")) {
@@ -62,6 +66,8 @@ public class ServidorTEST {
                 String horario = partesMensagem[2];
                 String cpf = partesMensagem[3];
                 cancelarReserva(numeroSala, horario, cpf);
+                Middleware.incrementarContador();
+
             }
 
             else if (operacao.equals("ATUALIZAR_RESERVAS")) {
