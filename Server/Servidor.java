@@ -74,10 +74,6 @@ public class Servidor {
                 atualizarReservas(mensagemRecebida.substring(19));
             }
 
-            else if (operacao.equals("SAIR_CLIENTE")) {
-                // Middleware.decrementarContador();
-            }
-
         }
     }
 
