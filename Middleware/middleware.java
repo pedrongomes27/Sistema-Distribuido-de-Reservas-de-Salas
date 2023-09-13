@@ -127,9 +127,9 @@ public class Middleware {
 
             if (isOn) {
                 // if(multicastPort < ){
-                System.out.println("Servidor disponível no endereço: " +
-                        enderecoServidor.getHostAddress() + ", porta: "
-                        + portaServidor + " (APENAS PARA FASE DEV)");
+                // System.out.println("Servidor disponível no endereço: " +
+                //         enderecoServidor.getHostAddress() + ", porta: "
+                //         + portaServidor + " (APENAS PARA FASE DEV)");
                 // connectionCount;
                 break;
                 // }
