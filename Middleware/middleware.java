@@ -11,10 +11,8 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
-import java.util.Set;
 import java.util.Map;
 
 import Client.VerificadorServidor;
@@ -55,8 +53,7 @@ public class Middleware {
         }
     }
 
-    public static boolean verificarServidorDisponivel()
-            throws IOException {
+    public static boolean verificarServidorDisponivel() throws IOException {
         String mensagemSolicitacao = "IS_SERVER_ON";
         byte[] bufferSolicitacao = mensagemSolicitacao.getBytes();
         DatagramPacket pacoteSolicitacao = new DatagramPacket(bufferSolicitacao, bufferSolicitacao.length,
@@ -71,11 +68,47 @@ public class Middleware {
             multicastSocketClient.receive(pacoteResposta);
             String resposta = new String(pacoteResposta.getData(), 0, pacoteResposta.getLength());
 
-            return resposta.equals("HEARTBEAT");
+            if (resposta.equals("HEARTBEAT")) {
+                // O servidor está disponível, agora verifique se ele está cheio
+                // if (isServerFull()) {
+                //     return false; // Não está disponível devido a estar cheio
+                // } else {
+                    return true; // Está disponível
+                // }
+            }
         } catch (IOException e) {
             return false;
         }
+        return false; // Não está disponível
     }
+
+    // public static boolean isServerFull() {
+    //     String mensagemSolicitacao = "IS_SERVER_FULL";
+    //     byte[] bufferSolicitacao = mensagemSolicitacao.getBytes();
+    //     DatagramPacket pacoteSolicitacao = new DatagramPacket(bufferSolicitacao, bufferSolicitacao.length,
+    //             enderecoServidor, portaServidor);
+
+    //     try {
+    //         multicastSocketClient.send(pacoteSolicitacao);
+
+    //         byte[] bufferResposta = new byte[1024];
+    //         DatagramPacket pacoteResposta = new DatagramPacket(bufferResposta, bufferResposta.length);
+
+    //         multicastSocketClient.receive(pacoteResposta);
+
+    //         if (pacoteResposta != null) {
+    //             String resposta = new String(pacoteResposta.getData(), 0, pacoteResposta.getLength());
+    //             if (resposta.equals("SERVER_FULL")) {
+    //                 return true; // O servidor está cheio
+    //             } else if (resposta.equals("SERVER_AVAILABLE")) {
+    //                 return false; // O servidor está vazio
+    //             }
+    //         }
+    //     } catch (IOException e) {
+    //         e.printStackTrace();
+    //     }
+    //     return false; // O servidor não está cheio ou não foi possível verificar
+    // }
 
     public static void localizarServidor() throws IOException,
             InterruptedException {
@@ -323,52 +356,86 @@ public class Middleware {
                 enviarMensagemParaCliente(mensagem);
             }
 
-            else if (mensagemRecebida.startsWith("SERVER_COUNT:") || mensagemRecebida.startsWith("CLIENT_PORT:")) {
-                // A mensagem começa com "SERVER_COUNT:" ou "CLIENT_PORT:", então contém
-                // informações de contagem do servidor ou porta do cliente
+            // else if (mensagemRecebida.equals("IS_SERVER_FULL")) {
+            //     if (!serverPorts.isEmpty()) {
+            //         for (Map.Entry<Integer, Map<String, Integer>> entry : serverPorts.entrySet()) {
+            //             int serverPort = entry.getKey();
+            //             Map<String, Integer> serverData = entry.getValue();
 
-                // Divida a mensagem com base na vírgula ","
-                String[] parts = mensagemRecebida.split(",");
+            //             // Verifique se a chave "COUNT" existe no mapa serverData
+            //             if (serverData.containsKey("COUNT")) {
+            //                 int count = serverData.get("COUNT");
+            //                 if (count >= 3) {
+            //                     // Se o servidor estiver cheio, envie "SERVER_FULL" de volta ao cliente
+            //                     String resposta = "SERVER_FULL";
+            //                     enviarMensagemParaCliente(resposta);
+            //                     break;
+            //                 } else {
+            //                     // Se ainda houver espaço para conexões, envie "SERVER_AVAILABLE" de volta ao
+            //                     // cliente
+            //                     String resposta = "SERVER_AVAILABLE";
+            //                     enviarMensagemParaCliente(resposta);
+            //                     break;
+            //                 }
+            //             } else {
+            //                 System.out.println("Porta do servidor: " + serverPort + ", COUNT não encontrado.");
+            //             }
+            //         }
+            //     } else {
+            //         String resposta = "SERVER_AVAILABLE";
+            //         enviarMensagemParaCliente(resposta);
+            //     }
 
-                for (String part : parts) {
-                    // Divida cada parte com base no sinal de igual "=" para obter a chave e o valor
-                    String[] keyValue = part.split("=");
-                    if (keyValue.length == 2) {
-                        String key = keyValue[0];
-                        String value = keyValue[1];
+            // }
 
-                        // Verifique se a chave é "SERVER_COUNT" para atualizar a contagem do servidor
-                        if (key.startsWith("SERVER_COUNT")) {
-                            // O valor deve ser algo como "1111=1", onde 1111 é a porta do servidor e 1 é a
-                            // contagem
-                            String[] serverInfo = key.split(":");
-                            if (serverInfo.length == 2) {
-                                int serverPort = Integer.parseInt(serverInfo[1]);
-                                int serverCount = Integer.parseInt(value);
+            // else if (mensagemRecebida.startsWith("SERVER_COUNT:") || mensagemRecebida.startsWith("CLIENT_PORT:")) {
+            //     // A mensagem começa com "SERVER_COUNT:" ou "CLIENT_PORT:", então contém
+            //     // informações de contagem do servidor ou porta do cliente
 
-                                // Verifique se já existe um mapa para esta porta do servidor
-                                if (!serverPorts.containsKey(serverPort)) {
-                                    serverPorts.put(serverPort, new HashMap<>());
-                                }
+            //     // Divida a mensagem com base na vírgula ","
+            //     String[] parts = mensagemRecebida.split(",");
 
-                                // Atualize a contagem do servidor no mapa serverPorts
-                                serverPorts.get(serverPort).put("COUNT", serverCount);
-                            }
-                        }
+            //     for (String part : parts) {
+            //         // Divida cada parte com base no sinal de igual "=" para obter a chave e o valor
+            //         String[] keyValue = part.split("=");
+            //         if (keyValue.length == 2) {
+            //             String key = keyValue[0];
+            //             String value = keyValue[1];
 
-                    }
-                    keyValue = part.split(":");
-                    // Verifique se a chave é "CLIENT_PORT" para adicionar a porta do cliente
-                    if (part.startsWith("CLIENT_PORT")) {
-                        String value = keyValue[1];
-                        int clientPort = Integer.parseInt(value);
+            //             // Verifique se a chave é "SERVER_COUNT" para atualizar a contagem do servidor
+            //             if (key.startsWith("SERVER_COUNT")) {
+            //                 // O valor deve ser algo como "1111=1", onde 1111 é a porta do servidor e 1 é a
+            //                 // contagem
+            //                 String[] serverInfo = key.split(":");
+            //                 if (serverInfo.length == 2) {
+            //                     int serverPort = Integer.parseInt(serverInfo[1]);
+            //                     int serverCount = Integer.parseInt(value);
 
-                        clientPorts.add(clientPort);
-                    }
-                }
-                System.out.println("SERVER_COUNT - " + serverPorts);
-                System.out.println("CLIENT_PORT - " + clientPorts);
-            }
+            //                     // Verifique se já existe um mapa para esta porta do servidor
+            //                     if (!serverPorts.containsKey(serverPort)) {
+            //                         serverPorts.put(serverPort, new HashMap<>());
+            //                     }
+
+            //                     // Atualize a contagem do servidor no mapa serverPorts
+            //                     serverPorts.get(serverPort).put("COUNT", serverCount);
+            //                 }
+            //             }
+
+            //         }
+            //         keyValue = part.split(":");
+            //         if (keyValue.length == 2) {
+            //             // Verifique se a chave é "CLIENT_PORT" para adicionar a porta do cliente
+            //             if (part.startsWith("CLIENT_PORT")) {
+            //                 String value = keyValue[1];
+            //                 int clientPort = Integer.parseInt(value);
+
+            //                 clientPorts.add(clientPort);
+            //             }
+            //         }
+            //     }
+            //     System.out.println("SERVER_COUNT - " + serverPorts);
+            //     System.out.println("CLIENT_PORT - " + clientPorts);
+            // }
 
             return pacote;
 
@@ -378,97 +445,97 @@ public class Middleware {
         }
     }
 
-    public static void incrementarContador() {
-        if (!clientPorts.contains(enderecoCliente.getPort())) {
-            clientPorts.add(0, enderecoCliente.getPort()); // Adiciona a porta do cliente à lista
+    // public static void incrementarContador() {
+    //     if (!clientPorts.contains(enderecoCliente.getPort())) {
+    //         clientPorts.add(0, enderecoCliente.getPort()); // Adiciona a porta do cliente à lista
 
-            int connectionCount = serverPorts
-                    .getOrDefault(multicastSocketServer.getLocalPort(), new HashMap<>())
-                    .getOrDefault("COUNT", 0); // Obtém a
-                                               // contagem
-                                               // atual para
-                                               // esta porta
-            // do servidor
-            connectionCount++;
-            Map<String, Integer> serverData = serverPorts.getOrDefault(multicastSocketServer.getLocalPort(),
-                    new HashMap<>());
-            serverData.put("COUNT", connectionCount);
-            serverPorts.put(multicastSocketServer.getLocalPort(), serverData); // Atualiza a contagem de
-                                                                               // conexões para esta porta do
-                                                                               // servidor
+    //         int connectionCount = serverPorts
+    //                 .getOrDefault(multicastSocketServer.getLocalPort(), new HashMap<>())
+    //                 .getOrDefault("COUNT", 0); // Obtém a
+    //                                            // contagem
+    //                                            // atual para
+    //                                            // esta porta
+    //         // do servidor
+    //         connectionCount++;
+    //         Map<String, Integer> serverData = serverPorts.getOrDefault(multicastSocketServer.getLocalPort(),
+    //                 new HashMap<>());
+    //         serverData.put("COUNT", connectionCount);
+    //         serverPorts.put(multicastSocketServer.getLocalPort(), serverData); // Atualiza a contagem de
+    //                                                                            // conexões para esta porta do
+    //                                                                            // servidor
 
-            // Antes de enviar a mensagem CONN_COUNT
-            StringBuilder serverCountStr = new StringBuilder("SERVER_COUNT:");
-            for (Map.Entry<Integer, Map<String, Integer>> entry : serverPorts.entrySet()) {
-                int serverPort = entry.getKey();
-                int serverCount = entry.getValue().getOrDefault("COUNT", 0);
-                serverCountStr.append(serverPort).append("=").append(serverCount).append(",");
-            }
+    //         // Antes de enviar a mensagem CONN_COUNT
+    //         StringBuilder serverCountStr = new StringBuilder("SERVER_COUNT:");
+    //         for (Map.Entry<Integer, Map<String, Integer>> entry : serverPorts.entrySet()) {
+    //             int serverPort = entry.getKey();
+    //             int serverCount = entry.getValue().getOrDefault("COUNT", 0);
+    //             serverCountStr.append(serverPort).append("=").append(serverCount).append(",");
+    //         }
 
-            StringBuilder clientPortsStr = new StringBuilder("CLIENT_PORT:");
-            for (Integer clientPort : clientPorts) {
-                clientPortsStr.append(clientPort).append(",");
-            }
+    //         StringBuilder clientPortsStr = new StringBuilder("CLIENT_PORT:");
+    //         for (Integer clientPort : clientPorts) {
+    //             clientPortsStr.append(clientPort).append(",");
+    //         }
 
-            // Combine as duas partes em uma única mensagem
-            String connCountMessage = serverCountStr.toString() + clientPortsStr.toString();
+    //         // Combine as duas partes em uma única mensagem
+    //         String connCountMessage = serverCountStr.toString() + clientPortsStr.toString();
 
-            // Envie a mensagem CONN_COUNT
-            enviarMensagemEntreServidor(connCountMessage, multicastSocketServer.getLocalPort());
+    //         // Envie a mensagem CONN_COUNT
+    //         enviarMensagemEntreServidor(connCountMessage, multicastSocketServer.getLocalPort());
 
-            System.out.println(
-                    "Cliente na porta " + enderecoCliente.getPort() + " conectou-se. Contagem de conexões: "
-                            + serverPorts);
-        }
-    }
+    //         System.out.println(
+    //                 "Cliente na porta " + enderecoCliente.getPort() + " conectou-se. Contagem de conexões: "
+    //                         + serverPorts);
+    //     }
+    // }
 
-    public static void decrementarContador() {
-        int portaCliente = enderecoCliente.getPort();
+    // public static void decrementarContador() {
+    //     int portaCliente = enderecoCliente.getPort();
 
-        if (clientPorts.contains(portaCliente)) {
-            // A porta do cliente está na lista, podemos decrementar o contador
+    //     if (clientPorts.contains(portaCliente)) {
+    //         // A porta do cliente está na lista, podemos decrementar o contador
 
-            // Remove a porta do cliente da lista
-            clientPorts.remove((Integer) portaCliente); // Usamos (Integer) para garantir a remoção do objeto Integer
+    //         // Remove a porta do cliente da lista
+    //         clientPorts.remove((Integer) portaCliente); // Usamos (Integer) para garantir a remoção do objeto Integer
 
-            // Obtém a contagem atual do servidor para a porta local
-            Map<String, Integer> serverData = serverPorts.getOrDefault(multicastSocketServer.getLocalPort(),
-                    new HashMap<>());
-            int connectionCount = serverData.getOrDefault("COUNT", 0);
+    //         // Obtém a contagem atual do servidor para a porta local
+    //         Map<String, Integer> serverData = serverPorts.getOrDefault(multicastSocketServer.getLocalPort(),
+    //                 new HashMap<>());
+    //         int connectionCount = serverData.getOrDefault("COUNT", 0);
 
-            // Decrementa a contagem
-            connectionCount--;
+    //         // Decrementa a contagem
+    //         connectionCount--;
 
-            // Atualiza a contagem do servidor
-            serverData.put("COUNT", connectionCount);
-            serverPorts.put(multicastSocketServer.getLocalPort(), serverData);
+    //         // Atualiza a contagem do servidor
+    //         serverData.put("COUNT", connectionCount);
+    //         serverPorts.put(multicastSocketServer.getLocalPort(), serverData);
 
-            // Antes de enviar a mensagem CONN_COUNT
-            StringBuilder serverCountStr = new StringBuilder("SERVER_COUNT:");
-            for (Map.Entry<Integer, Map<String, Integer>> entry : serverPorts.entrySet()) {
-                int serverPort = entry.getKey();
-                int serverCount = entry.getValue().getOrDefault("COUNT", 0);
-                serverCountStr.append(serverPort).append("=").append(serverCount).append(",");
-            }
+    //         // Antes de enviar a mensagem CONN_COUNT
+    //         StringBuilder serverCountStr = new StringBuilder("SERVER_COUNT:");
+    //         for (Map.Entry<Integer, Map<String, Integer>> entry : serverPorts.entrySet()) {
+    //             int serverPort = entry.getKey();
+    //             int serverCount = entry.getValue().getOrDefault("COUNT", 0);
+    //             serverCountStr.append(serverPort).append("=").append(serverCount).append(",");
+    //         }
 
-            StringBuilder clientPortsStr = new StringBuilder("CLIENT_PORT:");
-            for (Integer clientPort : clientPorts) {
-                clientPortsStr.append(clientPort).append(",");
-            }
+    //         StringBuilder clientPortsStr = new StringBuilder("CLIENT_PORT:");
+    //         for (Integer clientPort : clientPorts) {
+    //             clientPortsStr.append(clientPort).append(",");
+    //         }
 
-            // Combine as duas partes em uma única mensagem
-            String connCountMessage = serverCountStr.toString() + clientPortsStr.toString();
+    //         // Combine as duas partes em uma única mensagem
+    //         String connCountMessage = serverCountStr.toString() + clientPortsStr.toString();
 
-            // Envie a mensagem CONN_COUNT
-            enviarMensagemEntreServidor(connCountMessage, multicastSocketServer.getLocalPort());
+    //         // Envie a mensagem CONN_COUNT
+    //         enviarMensagemEntreServidor(connCountMessage, multicastSocketServer.getLocalPort());
 
-            System.out.println(
-                    "Cliente na porta " + portaCliente + " desconectou-se. Contagem de conexões: " + serverPorts);
-        } else {
-            // A porta do cliente não está na lista, não há nada para decrementar
-            System.out.println("Tentativa de decrementar um cliente que não está na lista: " + portaCliente);
-        }
-    }
+    //         System.out.println(
+    //                 "Cliente na porta " + portaCliente + " desconectou-se. Contagem de conexões: " + serverPorts);
+    //     } else {
+    //         // A porta do cliente não está na lista, não há nada para decrementar
+    //         System.out.println("Tentativa de decrementar um cliente que não está na lista: " + portaCliente);
+    //     }
+    // }
 
     public static void enviarMensagemParaCliente(String mensagem) {
         try {

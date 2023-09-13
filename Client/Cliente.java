@@ -41,6 +41,12 @@ public class Cliente {
 
     }
 
+    public static void reconectar() throws IOException, InterruptedException {
+        Middleware.encerrarVerificadorServidor();
+        Middleware.localizarServidor();
+        Middleware.iniciarVerificadorServidor();
+    }
+
     public static void processarOpcao(int opcao, Scanner scanner) throws IOException, InterruptedException {
         switch (opcao) {
             case 1:
@@ -48,9 +54,7 @@ public class Cliente {
                     Middleware.enviarMensagemParaServidor("CONSULTAR_DISPONIBILIDADE");
                     Middleware.receberRespostaDoServidor();
                 } else {
-                    Middleware.encerrarVerificadorServidor();
-                    Middleware.localizarServidor();
-                    Middleware.iniciarVerificadorServidor();
+                    reconectar();
                 }
                 break;
             case 2:
@@ -70,10 +74,7 @@ public class Cliente {
                                     + cpf);
                     Middleware.receberRespostaDoServidor();
                 } else {
-                    
-                    Middleware.encerrarVerificadorServidor();
-                    Middleware.localizarServidor();
-                    Middleware.iniciarVerificadorServidor();
+                    reconectar();
                 }
                 break;
             case 3:
@@ -88,13 +89,19 @@ public class Cliente {
                             "CANCELAR_RESERVA " + findSala + " " + findHorario + " " + findCpf);
                     Middleware.receberRespostaDoServidor();
                 } else {
-                    Middleware.encerrarVerificadorServidor();
-                    Middleware.localizarServidor();
-                    Middleware.iniciarVerificadorServidor();
+                    reconectar();
+
                 }
                 break;
             case 4:
-                Middleware.encerrarCliente();
+                if (Middleware.verificarServidorDisponivel()) {
+                    Middleware.enviarMensagemParaServidor(
+                            "SAIR_CLIENTE");
+                    Middleware.encerrarCliente();
+                } else {
+                    reconectar();
+
+                }
                 break;
             default:
                 System.out.println("Opção inválida.");

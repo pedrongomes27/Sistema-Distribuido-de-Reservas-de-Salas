@@ -45,7 +45,7 @@ public class Servidor {
 
             else if (operacao.equals("CONSULTAR_DISPONIBILIDADE")) {
                 consultarDisponibilidade();
-                Middleware.incrementarContador();
+                // Middleware.incrementarContador();
 
             }
 
@@ -57,7 +57,7 @@ public class Servidor {
                 String cpf = partesMensagem[5];
                 Usuario usuario = new Usuario(nome, sobrenome, cpf);
                 fazerReserva(numeroSala, horario, usuario);
-                Middleware.incrementarContador();
+                // Middleware.incrementarContador();
 
             }
 
@@ -66,12 +66,16 @@ public class Servidor {
                 String horario = partesMensagem[2];
                 String cpf = partesMensagem[3];
                 cancelarReserva(numeroSala, horario, cpf);
-                Middleware.incrementarContador();
+                // Middleware.incrementarContador();
 
             }
 
             else if (operacao.equals("ATUALIZAR_RESERVAS")) {
                 atualizarReservas(mensagemRecebida.substring(19));
+            }
+
+            else if (operacao.equals("SAIR_CLIENTE")) {
+                // Middleware.decrementarContador();
             }
 
         }
