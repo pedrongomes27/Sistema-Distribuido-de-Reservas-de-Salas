@@ -1,6 +1,6 @@
 package Client;
 
-import Middleware.Middleware;
+import Middle.Middleware;
 
 public class Main {
     public static void main(String[] args) {

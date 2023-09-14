@@ -2,7 +2,7 @@ package Client;
 
 import java.io.IOException;
 import java.util.Scanner;
-import Middleware.Middleware;
+import Middle.Middleware;
 
 public class Cliente {
 

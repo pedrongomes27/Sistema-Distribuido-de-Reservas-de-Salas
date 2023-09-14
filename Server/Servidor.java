@@ -4,7 +4,7 @@ import java.net.DatagramPacket;
 import java.util.HashMap;
 import java.util.Map;
 
-import Middleware.Middleware;
+import Middle.Middleware;
 
 public class Servidor {
     private static Map<Integer, Sala> salas = new HashMap<>();

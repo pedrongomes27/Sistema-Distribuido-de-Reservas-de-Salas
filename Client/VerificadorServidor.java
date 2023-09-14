@@ -1,7 +1,7 @@
 package Client;
 
 import java.io.IOException;
-import Middleware.Middleware;
+import Middle.Middleware;
 
 public class VerificadorServidor extends Thread {
 
